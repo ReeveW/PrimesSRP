@@ -8,6 +8,9 @@
 
 #include "PrimeCharacteristics.hpp"
 
+/*
+counts all primes 1-100, then finds the largest gap between them. keeps track of the amount of time taken for each function.
+*/
 int main(){
     std::vector<uint64_t> v;
     const auto start{std::chrono::steady_clock::now()};
@@ -16,10 +19,6 @@ int main(){
     const std::chrono::duration<double> elapsed_seconds{finish - start};
     std::cout << "time to generate primes: " << elapsed_seconds.count() << std::endl;
     std::cout << "number of primes: " << v.size() << std::endl;
-
-    // for(const auto& x : v){
-    //     std::cout << x << std::endl;
-    // }
 
     const auto start1{std::chrono::steady_clock::now()};
     const auto gap{largestGap(v)};
