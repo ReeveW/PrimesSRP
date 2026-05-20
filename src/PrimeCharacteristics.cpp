@@ -16,7 +16,8 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x) {
   uint64_t prime;
 
   std::vector<uint64_t> firstPrimeInAP(n);
-  std::vector<uint64_t> largestGapInAP(n, 0); // tracks largest number of "steps"
+  std::vector<uint64_t> largestGapInAP(n,
+                                       0);  // tracks largest number of "steps"
   std::vector<uint64_t> primeCountInAP(n, 0);
   std::vector<uint64_t> lastPrimeInAP(n, 0);
 
@@ -25,7 +26,8 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x) {
     if (primeCountInAP[a] == 0) {
       firstPrimeInAP[a] = prime;
     } else {
-      largestGapInAP[a] = std::max(largestGapInAP[a], ((prime / n) - lastPrimeInAP[a]));
+      largestGapInAP[a] =
+          std::max(largestGapInAP[a], ((prime / n) - lastPrimeInAP[a]));
     }
     primeCountInAP[a]++;
     lastPrimeInAP[a] = prime / n;
@@ -33,9 +35,9 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x) {
   return primeCountInAP;
 }
 
-void computeAll(const uint64_t upperBound, const uint64_t x){
-  for(int i = 2; i < upperBound; ++i){
-    primesModN(i, x); // how should i be storing this information now?
+void computeAll(const uint64_t upperBound, const uint64_t x) {
+  for (int i = 2; i < upperBound; ++i) {
+    primesModN(i, x);  // how should i be storing this information now?
   }
 }
 
