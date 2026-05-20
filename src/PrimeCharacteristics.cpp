@@ -33,6 +33,12 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x) {
   return primeCountInAP;
 }
 
+void computeAll(const uint64_t upperBound, const uint64_t x){
+  for(int i = 2; i < upperBound; ++i){
+    primesModN(i, x); // how should i be storing this information now?
+  }
+}
+
 int add(const std::vector<uint64_t>& v) {
   int a = 0;
   for (int i = 0; i < v.size(); ++i) {

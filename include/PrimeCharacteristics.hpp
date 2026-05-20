@@ -29,7 +29,7 @@ progressions we use.
 std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x);
 
 /*
-computes the primes mod n for all n up to upperBound, with x as the upper limit
+computes the primes mod n for all n less than upperBound, with x as the upper limit
 of primes we look for.
 */
 
