@@ -9,14 +9,8 @@
 #include "PrimeCharacteristics.hpp"
 
 int main() {
-  const auto start1{std::chrono::steady_clock::now()};
-
-  std::vector<uint64_t> count = primesModN(1000, 6000);
-
-  const auto finish1{std::chrono::steady_clock::now()};
-  const std::chrono::duration<double> elapsed_seconds1{finish1 - start1};
-  std::cout << "time: " << elapsed_seconds1.count() << std::endl;
-  std::cout << "primes: " << add(count) << std::endl;
+  std::vector<long double> theta = eTheta(4, 120);
+  std::cout << theta[1] << std::endl << theta[3] << std::endl;
 
   return 0;
 }
