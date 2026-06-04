@@ -35,47 +35,54 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x) {
 }
 
 std::vector<long double> eTheta(const uint64_t n, const uint64_t x) {
-  std::vector<uint64_t> cutoffs = {10,         100,        1000,     10000,
-                                   100000,     1000000,    10000000, 100000000,
-                                   1000000000, 10000000000};
+  std::vector<uint64_t> cutoffs = {10,          100,          1000,
+                                   10000,       100000,       1000000,
+                                   10000000,    100000000,    1000000000,
+                                   10000000000, 100000000000, 1000000000000};
   int currentCutoff = 0;
   primesieve::iterator it;
   uint64_t prime;
 
   std::vector<uint64_t> lastPrimeInAP(n, 0);
   std::vector<long double> thetaInAP(n, 0);
-  std::vector<long double> maxError(n, 0);
+  std::vector<long double> maxError(n, -std::numeric_limits<long double>::infinity());
   std::vector<long double> minError(
       n, std::numeric_limits<long double>::infinity());
-  std::vector<OutlierInfo> maxOutliers(10, {0, 0, 0});
+  std::vector<OutlierInfo> maxOutliers(cutoffs.size(), {0, 0, -std::numeric_limits<long double>::infinity()});
   std::vector<OutlierInfo> minOutliers(
-      10, {0, 0, std::numeric_limits<long double>::infinity()});
-
-  long double denom =
-      std::sqrt(10) * std::log(std::log(static_cast<long double>(10)));
-  long double numerator = 1.0L / phi(10) * 10;
+      cutoffs.size(), {0, 0, std::numeric_limits<long double>::infinity()});
+  uint64_t phin = phi(n);
 
   while ((prime = it.next_prime()) < x) {
     if (prime > cutoffs[currentCutoff]) {
+      long double d = denom(cutoffs[currentCutoff]);
+      long double num = numerator(phin, cutoffs[currentCutoff]);
       nextCutoff(maxError, minError, cutoffs, currentCutoff, thetaInAP,
-                 maxOutliers, minOutliers, n, denom, numerator);
+                 maxOutliers, minOutliers, n, d, num);
       if (currentCutoff + 1 < cutoffs.size()) {
         currentCutoff++;
       } else {
         return thetaInAP;
       }
     }
+    long double d = denom(prime);
+    long double num = numerator(phin, prime);
     uint64_t a = prime % n;
-    if (lastPrimeInAP[a] != 0) {
-      maxError[a] =
-          std::max(maxError[a], error(thetaInAP[a], numerator, denom));
-    }
+    // should i ignore the first prime in an AP?
+    maxError[a] = std::max(maxError[a], error(thetaInAP[a], num, d));
     lastPrimeInAP[a] = prime;
     thetaInAP[a] += std::log(static_cast<long double>(prime));
-    minError[a] = std::min(minError[a], error(thetaInAP[a], numerator, denom));
+    minError[a] = std::min(minError[a], error(thetaInAP[a], num, d));
   }
   return thetaInAP;
 }
+
+long double denom(uint64_t x) {
+  return std::sqrt(x) *
+         std::pow(std::log(std::log(std::log(static_cast<long double>(x)))), 2);
+}
+
+long double numerator(uint64_t phin, uint64_t x) { return (1.0L / phin) * x; }
 
 void nextCutoff(std::vector<long double>& maxError,
                 std::vector<long double>& minError,
@@ -84,7 +91,7 @@ void nextCutoff(std::vector<long double>& maxError,
                 std::vector<OutlierInfo>& maxOutliers,
                 std::vector<OutlierInfo>& minOutliers, uint64_t n,
                 long double& denom, long double& numerator) {
-  int x = cutoffs[currentCutoff];
+  uint64_t x = cutoffs[currentCutoff];
   for (uint64_t i = 0; i < n; ++i) {
     maxError[i] = std::max(maxError[i], error(thetaInAP[i], numerator, denom));
     if (maxError[i] > maxOutliers[currentCutoff].error) {
@@ -93,21 +100,18 @@ void nextCutoff(std::vector<long double>& maxError,
     if (minError[i] < minOutliers[currentCutoff].error) {
       minOutliers[currentCutoff] = {i, n, minError[i]};
     }
+    // temporary output statements
     std::cout << "cutoff = " << x << " residue = " << i
               << " theta = " << thetaInAP[i] << " error = " << maxError[i]
               << " min = " << minError[i] << '\n';
   }
-
-  denom = std::sqrt(x) * std::log(std::log(static_cast<long double>(x)));
-  numerator = 1.0L / phi(x) * x;
   return;
 }
 
-// should this use the cutoff (x) or n?
-uint64_t phi(const uint64_t cutoff) {
+uint64_t phi(const uint64_t n) {
   uint64_t count = 0;
-  for (uint64_t a = 1; a < cutoff; ++a) {
-    if (std::gcd(a, cutoff) == 1) {
+  for (uint64_t a = 1; a < n; ++a) {
+    if (std::gcd(a, n) == 1) {
       count++;
     }
   }

@@ -4,11 +4,11 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <primesieve.hpp>
 #include <unordered_map>
 #include <vector>
-#include <limits>
 
 struct OutlierInfo {
   uint64_t a;
@@ -43,6 +43,10 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x);
 
 std::vector<long double> eTheta(const uint64_t n, const uint64_t x);
 
+long double denom(uint64_t x);
+
+long double numerator(uint64_t phin, uint64_t x);
+
 void nextCutoff(std::vector<long double>& maxError,
                 std::vector<long double>& minError,
                 std::vector<uint64_t>& cutoffs, int currentCutoff,
@@ -54,14 +58,14 @@ void nextCutoff(std::vector<long double>& maxError,
 long double error(long double thetaOfA, long double numerator,
                   long double denom);
 
-    /*
-    calculates Euler's totient function for n.
-    for all numbers a in the range of 1 to n-1, finds the gcd of a and n, if
-    it's 1 we increment the count. returns the count of numbers relatively prime
-    to n.
-    */
+/*
+calculates Euler's totient function for n.
+for all numbers a in the range of 1 to n-1, finds the gcd of a and n, if
+it's 1 we increment the count. returns the count of numbers relatively prime
+to n.
+*/
 
-    uint64_t phi(const uint64_t n);
+uint64_t phi(const uint64_t n);
 
 /*
 computes the primes mod n for all n less than upperBound, with x as the upper
