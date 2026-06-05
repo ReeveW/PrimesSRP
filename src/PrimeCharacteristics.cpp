@@ -65,13 +65,15 @@ std::vector<long double> eTheta(const uint64_t n, const uint64_t x) {
         return thetaInAP;
       }
     }
-    long double d = denom(prime);
-    long double num = numerator(phin, prime);
+    long double d = denom(prime - 1);
+    long double num = numerator(phin, prime - 1);
     uint64_t a = prime % n;
     // should i ignore the first prime in an AP?
     maxError[a] = std::max(maxError[a], error(thetaInAP[a], num, d));
     lastPrimeInAP[a] = prime;
     thetaInAP[a] += std::log(static_cast<long double>(prime));
+    d = denom(prime);
+    num = numerator(phin, prime);
     minError[a] = std::min(minError[a], error(thetaInAP[a], num, d));
   }
   return thetaInAP;
@@ -93,7 +95,8 @@ void nextCutoff(std::vector<long double>& maxError,
                 long double& denom, long double& numerator) {
   uint64_t x = cutoffs[currentCutoff];
   for (uint64_t i = 0; i < n; ++i) {
-    maxError[i] = std::max(maxError[i], error(thetaInAP[i], numerator, denom));
+    long double e = error(thetaInAP[i], numerator, denom);
+    maxError[i] = std::max(maxError[i], e);
     if (maxError[i] > maxOutliers[currentCutoff].error) {
       maxOutliers[currentCutoff] = {i, n, maxError[i]};
     }
@@ -102,8 +105,8 @@ void nextCutoff(std::vector<long double>& maxError,
     }
     // temporary output statements
     std::cout << "cutoff = " << x << " residue = " << i
-              << " theta = " << thetaInAP[i] << " error = " << maxError[i]
-              << " min = " << minError[i] << '\n';
+              << " theta = " << thetaInAP[i] << " max = " << maxError[i]
+              << " min = " << minError[i] << " e: " << e << '\n';
   }
   return;
 }
