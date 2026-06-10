@@ -82,11 +82,11 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
     }
 
     // temporary output statements
-    std::cout << "cutoff = " << x << " residue = " << i
-              << " theta = " << t.thetaInAP[i] << " max = " << t.maxError[i]
-              << " found at: " << t.primeOfMaxError[i]
-              << " min = " << t.minError[i]
-              << " found at: " << t.primeOfMinError[i] << " e: " << e << '\n';
+    // std::cout << "cutoff = " << x << " residue = " << i
+    //           << " theta = " << t.thetaInAP[i] << " max = " << t.maxError[i]
+    //           << " found at: " << t.primeOfMaxError[i]
+    //           << " min = " << t.minError[i]
+    //           << " found at: " << t.primeOfMinError[i] << " e: " << e << '\n';
 
     t.maxError[i] = e;
     t.primeOfMaxError[i] = x;
