@@ -17,18 +17,18 @@ std::vector<long double> eTheta(const uint64_t n, const uint64_t x) {
       long double num = numerator(phin, cutoffs[currentCutoff]);
       nextCutoff(cutoffs, currentCutoff, n, t, d, num);
     }
-    
+
     long double d = denom(prime);
     long double num = numerator(phin, prime);
     uint64_t a = prime % n;
-    int currentMin = error(t.thetaInAP[a], num, d);
-    if (currentMin > t.minError[a]) {
+    long double currentMin = error(t.thetaInAP[a], num, d);
+    if (currentMin < t.minError[a]) {
       t.minError[a] = currentMin;
       t.primeOfMinError[a] = prime;
     }
     t.lastPrimeInAP[a] = prime;
     t.thetaInAP[a] += std::log(static_cast<long double>(prime));
-    uint64_t currentMax = error(t.thetaInAP[a], num, d);
+    long double currentMax = error(t.thetaInAP[a], num, d);
     if (currentMax > t.maxError[a]) {
       t.maxError[a] = currentMax;
       t.primeOfMaxError[a] = prime;
@@ -50,17 +50,32 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
   uint64_t x = cutoffs[currentCutoff];
   for (uint64_t i = 0; i < n; ++i) {
     long double e = error(t.thetaInAP[i], num, d);
-    t.maxError[i] = std::max(t.maxError[i], e);
+
+    if (e < t.minError[i]) {
+      t.minError[i] = e;
+      t.primeOfMinError[i] = x;
+    }
+    if (e > t.maxError[i]) {
+      t.maxError[i] = e;
+      t.primeOfMaxError[i] = x;
+    }
+
     if (t.maxError[i] > t.maxOutliers[currentCutoff].error) {
-      t.maxOutliers[currentCutoff] = {i, n, t.maxError[i]};
+      t.maxOutliers[currentCutoff] = {i, t.primeOfMaxError[i], t.maxError[i]};
     }
     if (t.minError[i] < t.minOutliers[currentCutoff].error) {
-      t.minOutliers[currentCutoff] = {i, n, t.minError[i]};
+      t.minOutliers[currentCutoff] = {i, t.primeOfMinError[i], t.minError[i]};
     }
+
     // temporary output statements
     std::cout << "cutoff = " << x << " residue = " << i
               << " theta = " << t.thetaInAP[i] << " max = " << t.maxError[i]
-              << " min = " << t.minError[i] << " e: " << e << '\n';
+              << " found at: " << t.primeOfMaxError[i]
+              << " min = " << t.minError[i]
+              << " found at: " << t.primeOfMinError[i] << " e: " << e << '\n';
+
+    t.maxError[i] = e;
+    t.minError[i] = e;
   }
   currentCutoff++;
   return;
@@ -80,8 +95,6 @@ long double error(long double thetaOfA, long double numerator,
                   long double denom) {
   return (thetaOfA - numerator) / denom;
 }
-
-
 
 uint64_t largestGap(const std::vector<uint64_t>& primes) {
   if (primes.size() <= 1) {

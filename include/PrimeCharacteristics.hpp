@@ -12,7 +12,7 @@
 
 struct OutlierInfo {
   uint64_t a;
-  uint64_t n;
+  uint64_t p;
   long double error;
 };
 
