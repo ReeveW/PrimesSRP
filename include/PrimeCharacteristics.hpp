@@ -26,6 +26,8 @@ struct ThetaErrorInfo {
   std::vector<OutlierInfo> maxOutliers;
   std::vector<OutlierInfo> minOutliers;
   std::vector<uint64_t> cutoffs;
+  std::vector<uint64_t> firstPrimeInAP;
+  std::vector<uint64_t> largestGapInAP;
 
   ThetaErrorInfo(uint64_t n, int numberOfCutoffs)
       : lastPrimeInAP(n, 0),
@@ -37,7 +39,9 @@ struct ThetaErrorInfo {
         maxOutliers(numberOfCutoffs,
                     {0, 0, -std::numeric_limits<long double>::infinity()}),
         minOutliers(numberOfCutoffs,
-                    {0, 0, std::numeric_limits<long double>::infinity()}) {}
+                    {0, 0, std::numeric_limits<long double>::infinity()}),
+                    firstPrimeInAP(n, 0),
+                    largestGapInAP(n, 0) {}
 };
 
 /*
@@ -67,13 +71,15 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x);
 
 std::vector<long double> eTheta(const uint64_t n, const uint64_t x);
 
+void updateErrorTerms(ThetaErrorInfo& t, uint64_t prime, uint64_t phin, uint64_t n, uint64_t a);
+
 long double denom(uint64_t x);
 
 long double numerator(uint64_t phin, uint64_t x);
 
 void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff,
                  uint64_t n, ThetaErrorInfo& t,
-                long double denom, long double numerator);
+                uint64_t phin);
 
 long double error(long double thetaOfA, long double numerator,
                   long double denom);

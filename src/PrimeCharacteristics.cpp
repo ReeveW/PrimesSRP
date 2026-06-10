@@ -13,28 +13,40 @@ std::vector<long double> eTheta(const uint64_t n, const uint64_t x) {
 
   while ((prime = it.next_prime()) < x) {
     if (prime > cutoffs[currentCutoff]) {
-      long double d = denom(cutoffs[currentCutoff]);
-      long double num = numerator(phin, cutoffs[currentCutoff]);
-      nextCutoff(cutoffs, currentCutoff, n, t, d, num);
+      nextCutoff(cutoffs, currentCutoff, n, t, phin);
     }
-
-    long double d = denom(prime);
-    long double num = numerator(phin, prime);
     uint64_t a = prime % n;
-    long double currentMin = error(t.thetaInAP[a], num, d);
-    if (currentMin < t.minError[a]) {
-      t.minError[a] = currentMin;
-      t.primeOfMinError[a] = prime;
+    updateErrorTerms(t, prime, phin, n, a);
+
+    //code for first prime in AP, max gap in each cutoff
+    if (!t.firstPrimeInAP[a]) {
+      t.firstPrimeInAP[a] = prime;
+    }else{
+      t.largestGapInAP[a] = std::max(t.largestGapInAP[a], prime - t.lastPrimeInAP[a]);
     }
     t.lastPrimeInAP[a] = prime;
-    t.thetaInAP[a] += std::log(static_cast<long double>(prime));
-    long double currentMax = error(t.thetaInAP[a], num, d);
-    if (currentMax > t.maxError[a]) {
-      t.maxError[a] = currentMax;
-      t.primeOfMaxError[a] = prime;
-    }
   }
   return t.thetaInAP;
+}
+
+void updateErrorTerms(ThetaErrorInfo& t, uint64_t prime, uint64_t phin,
+                      uint64_t n, uint64_t a) {
+  long double d = denom(prime);
+  long double num = numerator(phin, prime);
+
+  long double currentMin = error(t.thetaInAP[a], num, d);
+  if (currentMin < t.minError[a]) {
+    t.minError[a] = currentMin;
+    t.primeOfMinError[a] = prime;
+  }
+  t.thetaInAP[a] += std::log(static_cast<long double>(prime));
+  long double currentMax = error(t.thetaInAP[a], num, d);
+  if (currentMax > t.maxError[a]) {
+    t.maxError[a] = currentMax;
+    t.primeOfMaxError[a] = prime;
+  }
+
+  return;
 }
 
 long double denom(uint64_t x) {
@@ -46,8 +58,10 @@ long double numerator(uint64_t phin, uint64_t x) { return (1.0L / phin) * x; }
 
 // now no longer stops when we go past the last cutoff, is that a problem ever?
 void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
-                ThetaErrorInfo& t, long double d, long double num) {
+                ThetaErrorInfo& t, uint64_t phin) {
   uint64_t x = cutoffs[currentCutoff];
+  long double d = denom(x);
+  long double num = numerator(phin, x);
   for (uint64_t i = 0; i < n; ++i) {
     long double e = error(t.thetaInAP[i], num, d);
 
@@ -75,7 +89,10 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
               << " found at: " << t.primeOfMinError[i] << " e: " << e << '\n';
 
     t.maxError[i] = e;
+    t.primeOfMaxError[i] = x;
     t.minError[i] = e;
+    t.primeOfMinError[i] = x;
+    t.largestGapInAP[i] = 0;
   }
   currentCutoff++;
   return;
