@@ -16,6 +16,30 @@ struct OutlierInfo {
   long double error;
 };
 
+struct ThetaErrorInfo {
+  std::vector<uint64_t> lastPrimeInAP;
+  std::vector<long double> thetaInAP;
+  std::vector<long double> maxError;
+  std::vector<long double> minError;
+  std::vector<uint64_t> primeOfMaxError;
+  std::vector<uint64_t> primeOfMinError;
+  std::vector<OutlierInfo> maxOutliers;
+  std::vector<OutlierInfo> minOutliers;
+  std::vector<uint64_t> cutoffs;
+
+  ThetaErrorInfo(uint64_t n, int numberOfCutoffs)
+      : lastPrimeInAP(n, 0),
+        thetaInAP(n, 0),
+        maxError(n, -std::numeric_limits<long double>::infinity()),
+        minError(n, std::numeric_limits<long double>::infinity()),
+        primeOfMaxError(n),
+        primeOfMinError(n),
+        maxOutliers(numberOfCutoffs,
+                    {0, 0, -std::numeric_limits<long double>::infinity()}),
+        minOutliers(numberOfCutoffs,
+                    {0, 0, std::numeric_limits<long double>::infinity()}) {}
+};
+
 /*
 finds the largest gap between two primes, given a list of primes.
 If the list has <= 1 elements then it returns 0.
@@ -47,13 +71,9 @@ long double denom(uint64_t x);
 
 long double numerator(uint64_t phin, uint64_t x);
 
-void nextCutoff(std::vector<long double>& maxError,
-                std::vector<long double>& minError,
-                std::vector<uint64_t>& cutoffs, int currentCutoff,
-                std::vector<long double>& thetaInAP,
-                std::vector<OutlierInfo>& maxOutliers,
-                std::vector<OutlierInfo>& minOutliers, uint64_t n,
-                long double& denom, long double& numerator);
+void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff,
+                 uint64_t n, ThetaErrorInfo& t,
+                long double denom, long double numerator);
 
 long double error(long double thetaOfA, long double numerator,
                   long double denom);

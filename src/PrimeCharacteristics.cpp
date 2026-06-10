@@ -1,5 +1,88 @@
 #include "PrimeCharacteristics.hpp"
 
+std::vector<long double> eTheta(const uint64_t n, const uint64_t x) {
+  std::vector<uint64_t> cutoffs = {10,          100,          1000,
+                                   10000,       100000,       1000000,
+                                   10000000,    100000000,    1000000000,
+                                   10000000000, 100000000000, 1000000000000};
+  int currentCutoff = 0;
+  primesieve::iterator it;
+  uint64_t prime;
+  ThetaErrorInfo t(n, cutoffs.size());
+  uint64_t phin = phi(n);
+
+  while ((prime = it.next_prime()) < x) {
+    if (prime > cutoffs[currentCutoff]) {
+      long double d = denom(cutoffs[currentCutoff]);
+      long double num = numerator(phin, cutoffs[currentCutoff]);
+      nextCutoff(cutoffs, currentCutoff, n, t, d, num);
+    }
+    
+    long double d = denom(prime);
+    long double num = numerator(phin, prime);
+    uint64_t a = prime % n;
+    int currentMin = error(t.thetaInAP[a], num, d);
+    if (currentMin > t.minError[a]) {
+      t.minError[a] = currentMin;
+      t.primeOfMinError[a] = prime;
+    }
+    t.lastPrimeInAP[a] = prime;
+    t.thetaInAP[a] += std::log(static_cast<long double>(prime));
+    uint64_t currentMax = error(t.thetaInAP[a], num, d);
+    if (currentMax > t.maxError[a]) {
+      t.maxError[a] = currentMax;
+      t.primeOfMaxError[a] = prime;
+    }
+  }
+  return t.thetaInAP;
+}
+
+long double denom(uint64_t x) {
+  return std::sqrt(x) *
+         std::pow(std::log(std::log(std::log(static_cast<long double>(x)))), 2);
+}
+
+long double numerator(uint64_t phin, uint64_t x) { return (1.0L / phin) * x; }
+
+// now no longer stops when we go past the last cutoff, is that a problem ever?
+void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
+                ThetaErrorInfo& t, long double d, long double num) {
+  uint64_t x = cutoffs[currentCutoff];
+  for (uint64_t i = 0; i < n; ++i) {
+    long double e = error(t.thetaInAP[i], num, d);
+    t.maxError[i] = std::max(t.maxError[i], e);
+    if (t.maxError[i] > t.maxOutliers[currentCutoff].error) {
+      t.maxOutliers[currentCutoff] = {i, n, t.maxError[i]};
+    }
+    if (t.minError[i] < t.minOutliers[currentCutoff].error) {
+      t.minOutliers[currentCutoff] = {i, n, t.minError[i]};
+    }
+    // temporary output statements
+    std::cout << "cutoff = " << x << " residue = " << i
+              << " theta = " << t.thetaInAP[i] << " max = " << t.maxError[i]
+              << " min = " << t.minError[i] << " e: " << e << '\n';
+  }
+  currentCutoff++;
+  return;
+}
+
+uint64_t phi(const uint64_t n) {
+  uint64_t count = 0;
+  for (uint64_t a = 1; a < n; ++a) {
+    if (std::gcd(a, n) == 1) {
+      count++;
+    }
+  }
+  return count;
+}
+
+long double error(long double thetaOfA, long double numerator,
+                  long double denom) {
+  return (thetaOfA - numerator) / denom;
+}
+
+
+
 uint64_t largestGap(const std::vector<uint64_t>& primes) {
   if (primes.size() <= 1) {
     return 0;
@@ -32,98 +115,6 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x) {
     lastPrimeInAP[a] = prime / n;
   }
   return primeCountInAP;
-}
-
-std::vector<long double> eTheta(const uint64_t n, const uint64_t x) {
-  std::vector<uint64_t> cutoffs = {10,          100,          1000,
-                                   10000,       100000,       1000000,
-                                   10000000,    100000000,    1000000000,
-                                   10000000000, 100000000000, 1000000000000};
-  int currentCutoff = 0;
-  primesieve::iterator it;
-  uint64_t prime;
-
-  std::vector<uint64_t> lastPrimeInAP(n, 0);
-  std::vector<long double> thetaInAP(n, 0);
-  std::vector<long double> maxError(n, -std::numeric_limits<long double>::infinity());
-  std::vector<long double> minError(
-      n, std::numeric_limits<long double>::infinity());
-  std::vector<OutlierInfo> maxOutliers(cutoffs.size(), {0, 0, -std::numeric_limits<long double>::infinity()});
-  std::vector<OutlierInfo> minOutliers(
-      cutoffs.size(), {0, 0, std::numeric_limits<long double>::infinity()});
-  uint64_t phin = phi(n);
-
-  while ((prime = it.next_prime()) < x) {
-    if (prime > cutoffs[currentCutoff]) {
-      long double d = denom(cutoffs[currentCutoff]);
-      long double num = numerator(phin, cutoffs[currentCutoff]);
-      nextCutoff(maxError, minError, cutoffs, currentCutoff, thetaInAP,
-                 maxOutliers, minOutliers, n, d, num);
-      if (currentCutoff + 1 < cutoffs.size()) {
-        currentCutoff++;
-      } else {
-        return thetaInAP;
-      }
-    }
-    long double d = denom(prime - 1);
-    long double num = numerator(phin, prime - 1);
-    uint64_t a = prime % n;
-    // should i ignore the first prime in an AP?
-    maxError[a] = std::max(maxError[a], error(thetaInAP[a], num, d));
-    lastPrimeInAP[a] = prime;
-    thetaInAP[a] += std::log(static_cast<long double>(prime));
-    d = denom(prime);
-    num = numerator(phin, prime);
-    minError[a] = std::min(minError[a], error(thetaInAP[a], num, d));
-  }
-  return thetaInAP;
-}
-
-long double denom(uint64_t x) {
-  return std::sqrt(x) *
-         std::pow(std::log(std::log(std::log(static_cast<long double>(x)))), 2);
-}
-
-long double numerator(uint64_t phin, uint64_t x) { return (1.0L / phin) * x; }
-
-void nextCutoff(std::vector<long double>& maxError,
-                std::vector<long double>& minError,
-                std::vector<uint64_t>& cutoffs, int currentCutoff,
-                std::vector<long double>& thetaInAP,
-                std::vector<OutlierInfo>& maxOutliers,
-                std::vector<OutlierInfo>& minOutliers, uint64_t n,
-                long double& denom, long double& numerator) {
-  uint64_t x = cutoffs[currentCutoff];
-  for (uint64_t i = 0; i < n; ++i) {
-    long double e = error(thetaInAP[i], numerator, denom);
-    maxError[i] = std::max(maxError[i], e);
-    if (maxError[i] > maxOutliers[currentCutoff].error) {
-      maxOutliers[currentCutoff] = {i, n, maxError[i]};
-    }
-    if (minError[i] < minOutliers[currentCutoff].error) {
-      minOutliers[currentCutoff] = {i, n, minError[i]};
-    }
-    // temporary output statements
-    std::cout << "cutoff = " << x << " residue = " << i
-              << " theta = " << thetaInAP[i] << " max = " << maxError[i]
-              << " min = " << minError[i] << " e: " << e << '\n';
-  }
-  return;
-}
-
-uint64_t phi(const uint64_t n) {
-  uint64_t count = 0;
-  for (uint64_t a = 1; a < n; ++a) {
-    if (std::gcd(a, n) == 1) {
-      count++;
-    }
-  }
-  return count;
-}
-
-long double error(long double thetaOfA, long double numerator,
-                  long double denom) {
-  return (thetaOfA - numerator) / denom;
 }
 
 void computeAll(const uint64_t upperBound, const uint64_t x) {
