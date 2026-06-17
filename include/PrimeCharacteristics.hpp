@@ -9,6 +9,8 @@
 #include <primesieve.hpp>
 #include <unordered_map>
 #include <vector>
+#include <iomanip>
+#include <fstream>
 
 struct OutlierInfo {
   uint64_t a;
@@ -40,9 +42,16 @@ struct ThetaErrorInfo {
                     {0, 0, -std::numeric_limits<long double>::infinity()}),
         minOutliers(numberOfCutoffs,
                     {0, 0, std::numeric_limits<long double>::infinity()}),
-                    firstPrimeInAP(n, 0),
-                    largestGapInAP(n, 0) {}
+        firstPrimeInAP(n, 0),
+        largestGapInAP(n, 0) {}
 };
+
+/*
+computes the primes mod n for all n less than upperBound, with x as the upper
+limit of primes we look for.
+*/
+
+void computeAll(const uint64_t upperBoundOfN, const uint64_t x);
 
 /*
 finds the largest gap between two primes, given a list of primes.
@@ -69,17 +78,28 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x);
 
 */
 
-std::vector<long double> eTheta(const uint64_t n, const uint64_t x);
+void eTheta(const uint64_t n, const uint64_t x);
 
-void updateErrorTerms(ThetaErrorInfo& t, uint64_t prime, uint64_t phin, uint64_t n, uint64_t a);
+void outputHeaderForN(uint64_t n);
+
+void updateErrorTerms(ThetaErrorInfo& t, uint64_t prime, uint64_t phin,
+                      uint64_t n, uint64_t a);
+
+void resetErrorForCutoff(long double e, ThetaErrorInfo& t, uint64_t i,
+                         uint64_t x);
+
+void updateCutoffErrors(long double e, ThetaErrorInfo& t, uint64_t i,
+                        uint64_t x, int currentCutoff);
 
 long double denom(uint64_t x);
 
 long double numerator(uint64_t phin, uint64_t x);
 
-void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff,
-                 uint64_t n, ThetaErrorInfo& t,
-                uint64_t phin);
+void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
+                ThetaErrorInfo& t, uint64_t phin);
+
+void outputErrorDataForCutoff(uint64_t cutoff, uint64_t a,
+                              const ThetaErrorInfo& t);
 
 long double error(long double thetaOfA, long double numerator,
                   long double denom);
@@ -92,13 +112,6 @@ to n.
 */
 
 uint64_t phi(const uint64_t n);
-
-/*
-computes the primes mod n for all n less than upperBound, with x as the upper
-limit of primes we look for.
-*/
-
-void computeAll(const uint64_t upperBound, const uint64_t x);
 
 /*
 adds up all the values in a vector. Used to verify that the number of primes

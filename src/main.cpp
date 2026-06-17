@@ -5,20 +5,19 @@
 #include <iostream>
 #include <primesieve.hpp>
 #include <vector>
+#include <pthread.h>
 
 #include "PrimeCharacteristics.hpp"
 
 int main() {
-  std::vector<uint64_t> v = {4, 12, 23, 100, 1000, 73218, 3921093, 10000000};
-  for(auto n : v){
     const auto start{std::chrono::steady_clock::now()};
 
-    std::vector<long double> theta = eTheta(n, 100000010);
+    computeAll(300, 1e9 + 1000);
 
     const auto finish{std::chrono::steady_clock::now()};
     const std::chrono::duration<double> elapsed_seconds{finish - start};
-    std::cout << "time to compute: " << elapsed_seconds.count() << " for n = " << n <<  std::endl;
-  }
+    std::cout << "time to compute: " << elapsed_seconds.count() << std::endl;
+  
 
   return 0;
 }

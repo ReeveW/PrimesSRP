@@ -1,6 +1,14 @@
 #include "PrimeCharacteristics.hpp"
 
-std::vector<long double> eTheta(const uint64_t n, const uint64_t x) {
+std::ofstream out("error_data.csv");
+
+void computeAll(const uint64_t upperBoundOfN, const uint64_t x) {
+  for (int i = 2; i < upperBoundOfN; ++i) {
+    eTheta(i, x);
+  }
+}
+
+void eTheta(const uint64_t n, const uint64_t x) {
   std::vector<uint64_t> cutoffs = {10,          100,          1000,
                                    10000,       100000,       1000000,
                                    10000000,    100000000,    1000000000,
@@ -11,6 +19,8 @@ std::vector<long double> eTheta(const uint64_t n, const uint64_t x) {
   ThetaErrorInfo t(n, cutoffs.size());
   uint64_t phin = phi(n);
 
+  outputHeaderForN(n);
+
   while ((prime = it.next_prime()) < x) {
     if (prime > cutoffs[currentCutoff]) {
       nextCutoff(cutoffs, currentCutoff, n, t, phin);
@@ -18,15 +28,24 @@ std::vector<long double> eTheta(const uint64_t n, const uint64_t x) {
     uint64_t a = prime % n;
     updateErrorTerms(t, prime, phin, n, a);
 
-    //code for first prime in AP, max gap in each cutoff
+    // code for first prime in AP, max gap in each cutoff
     if (!t.firstPrimeInAP[a]) {
       t.firstPrimeInAP[a] = prime;
-    }else{
-      t.largestGapInAP[a] = std::max(t.largestGapInAP[a], prime - t.lastPrimeInAP[a]);
+    } else {
+      t.largestGapInAP[a] =
+          std::max(t.largestGapInAP[a], prime - t.lastPrimeInAP[a]);
     }
     t.lastPrimeInAP[a] = prime;
   }
-  return t.thetaInAP;
+  return;
+}
+
+void outputHeaderForN(uint64_t n) {
+  out << "n = " << n << std::endl
+      << "current cutoff, a, max error, prime of "
+         "max error, min error, prime of min error"
+      << std::endl;
+  return;
 }
 
 void updateErrorTerms(ThetaErrorInfo& t, uint64_t prime, uint64_t phin,
@@ -63,38 +82,58 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
   long double d = denom(x);
   long double num = numerator(phin, x);
   for (uint64_t i = 0; i < n; ++i) {
+    if (std::gcd(i, n) != 1) {
+      continue;
+    }
     long double e = error(t.thetaInAP[i], num, d);
 
-    if (e < t.minError[i]) {
-      t.minError[i] = e;
-      t.primeOfMinError[i] = x;
-    }
-    if (e > t.maxError[i]) {
-      t.maxError[i] = e;
-      t.primeOfMaxError[i] = x;
-    }
+    updateCutoffErrors(e, t, i, x, currentCutoff);
 
-    if (t.maxError[i] > t.maxOutliers[currentCutoff].error) {
-      t.maxOutliers[currentCutoff] = {i, t.primeOfMaxError[i], t.maxError[i]};
-    }
-    if (t.minError[i] < t.minOutliers[currentCutoff].error) {
-      t.minOutliers[currentCutoff] = {i, t.primeOfMinError[i], t.minError[i]};
-    }
+    outputErrorDataForCutoff(x, i, t);
 
-    // temporary output statements
-    // std::cout << "cutoff = " << x << " residue = " << i
-    //           << " theta = " << t.thetaInAP[i] << " max = " << t.maxError[i]
-    //           << " found at: " << t.primeOfMaxError[i]
-    //           << " min = " << t.minError[i]
-    //           << " found at: " << t.primeOfMinError[i] << " e: " << e << '\n';
-
-    t.maxError[i] = e;
-    t.primeOfMaxError[i] = x;
-    t.minError[i] = e;
-    t.primeOfMinError[i] = x;
-    t.largestGapInAP[i] = 0;
+    resetErrorForCutoff(e, t, i, x);
   }
   currentCutoff++;
+  return;
+}
+
+void outputErrorDataForCutoff(uint64_t cutoff, uint64_t a,
+                              const ThetaErrorInfo& t) {
+  out << std::scientific << std::setprecision(0)
+      << static_cast<long double>(cutoff) << "," << std::defaultfloat << a
+      << "," << std::fixed << std::setprecision(10) << t.maxError[a] << ","
+      << t.primeOfMaxError[a] << "," << t.minError[a] << ","
+      << t.primeOfMinError[a] << std::endl;
+  return;
+}
+
+void resetErrorForCutoff(long double e, ThetaErrorInfo& t, uint64_t i,
+                         uint64_t x) {
+  t.maxError[i] = e;
+  t.primeOfMaxError[i] = x;
+  t.minError[i] = e;
+  t.primeOfMinError[i] = x;
+  t.largestGapInAP[i] = 0;
+  return;
+}
+
+void updateCutoffErrors(long double e, ThetaErrorInfo& t, uint64_t i,
+                        uint64_t x, int currentCutoff) {
+  if (e < t.minError[i]) {
+    t.minError[i] = e;
+    t.primeOfMinError[i] = x;
+  }
+  if (e > t.maxError[i]) {
+    t.maxError[i] = e;
+    t.primeOfMaxError[i] = x;
+  }
+
+  if (t.maxError[i] > t.maxOutliers[currentCutoff].error) {
+    t.maxOutliers[currentCutoff] = {i, t.primeOfMaxError[i], t.maxError[i]};
+  }
+  if (t.minError[i] < t.minOutliers[currentCutoff].error) {
+    t.minOutliers[currentCutoff] = {i, t.primeOfMinError[i], t.minError[i]};
+  }
   return;
 }
 
@@ -145,12 +184,6 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x) {
     lastPrimeInAP[a] = prime / n;
   }
   return primeCountInAP;
-}
-
-void computeAll(const uint64_t upperBound, const uint64_t x) {
-  for (int i = 2; i < upperBound; ++i) {
-    primesModN(i, x);  // how should i be storing this information now?
-  }
 }
 
 int add(const std::vector<uint64_t>& v) {
