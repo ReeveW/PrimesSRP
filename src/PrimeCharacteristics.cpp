@@ -1,14 +1,48 @@
 #include "PrimeCharacteristics.hpp"
 
-std::ofstream out("error_data.csv");
-
 void computeAll(const uint64_t upperBoundOfN, const uint64_t x) {
+  std::ofstream* out = new std::ofstream("error_data.csv");
   for (int i = 2; i < upperBoundOfN; ++i) {
-    eTheta(i, x);
+    eTheta(i, x, out);
   }
+  delete out;
 }
 
-void eTheta(const uint64_t n, const uint64_t x) {
+struct ThreadData {
+  uint64_t x, n;
+  std::ostream* output;
+};
+
+void* eThetaThread(void* arg) {
+  ThreadData* data = static_cast<ThreadData*>(arg);
+
+  eTheta(data->n, data->x, data->output);
+
+  return nullptr;
+}
+
+// works wierdly if upperBoundOfN is not divisible by threadCount
+void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
+                                  const uint64_t x, int threadCount,
+                                  std::vector<std::ostream*> outputFiles) {
+  uint64_t iterations = upperBoundOfN / threadCount;
+  std::vector<pthread_t> v(threadCount);
+  std::vector<ThreadData> threadData(threadCount);
+  for (int i = 0; i < iterations; ++i) {
+    for (int j = 0; j < v.size(); ++j) {
+      uint64_t n = i + (j * iterations);
+      if (n == 0 || n == 1) continue;
+      threadData[j] = {n, x, outputFiles[j]};
+      pthread_create(&v[j], nullptr, eThetaThread, &threadData[j]);
+    }
+    for (auto& x : v) {
+      pthread_join(x, nullptr);
+    }
+  }
+  return;
+}
+
+void eTheta(const uint64_t n, const uint64_t x, std::ostream* out) {
   std::vector<uint64_t> cutoffs = {10,          100,          1000,
                                    10000,       100000,       1000000,
                                    10000000,    100000000,    1000000000,
@@ -19,11 +53,11 @@ void eTheta(const uint64_t n, const uint64_t x) {
   ThetaErrorInfo t(n, cutoffs.size());
   uint64_t phin = phi(n);
 
-  outputHeaderForN(n);
+  outputHeaderForN(n, out);
 
   while ((prime = it.next_prime()) < x) {
     if (prime > cutoffs[currentCutoff]) {
-      nextCutoff(cutoffs, currentCutoff, n, t, phin);
+      nextCutoff(cutoffs, currentCutoff, n, t, phin, out);
     }
     uint64_t a = prime % n;
     updateErrorTerms(t, prime, phin, n, a);
@@ -40,11 +74,11 @@ void eTheta(const uint64_t n, const uint64_t x) {
   return;
 }
 
-void outputHeaderForN(uint64_t n) {
-  out << "n = " << n << std::endl
-      << "current cutoff, a, max error, prime of "
-         "max error, min error, prime of min error"
-      << std::endl;
+void outputHeaderForN(uint64_t n, std::ostream* out) {
+  *out << "n = " << n << std::endl
+       << "current cutoff, a, max error, prime of "
+          "max error, min error, prime of min error"
+       << std::endl;
   return;
 }
 
@@ -77,7 +111,7 @@ long double numerator(uint64_t phin, uint64_t x) { return (1.0L / phin) * x; }
 
 // now no longer stops when we go past the last cutoff, is that a problem ever?
 void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
-                ThetaErrorInfo& t, uint64_t phin) {
+                ThetaErrorInfo& t, uint64_t phin, std::ostream* out) {
   uint64_t x = cutoffs[currentCutoff];
   long double d = denom(x);
   long double num = numerator(phin, x);
@@ -89,7 +123,7 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
 
     updateCutoffErrors(e, t, i, x, currentCutoff);
 
-    outputErrorDataForCutoff(x, i, t);
+    outputErrorDataForCutoff(x, i, t, out);
 
     resetErrorForCutoff(e, t, i, x);
   }
@@ -98,12 +132,12 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
 }
 
 void outputErrorDataForCutoff(uint64_t cutoff, uint64_t a,
-                              const ThetaErrorInfo& t) {
-  out << std::scientific << std::setprecision(0)
-      << static_cast<long double>(cutoff) << "," << std::defaultfloat << a
-      << "," << std::fixed << std::setprecision(10) << t.maxError[a] << ","
-      << t.primeOfMaxError[a] << "," << t.minError[a] << ","
-      << t.primeOfMinError[a] << std::endl;
+                              const ThetaErrorInfo& t, std::ostream* out) {
+  *out << std::scientific << std::setprecision(0)
+       << static_cast<long double>(cutoff) << "," << std::defaultfloat << a
+       << "," << std::fixed << std::setprecision(10) << t.maxError[a] << ","
+       << t.primeOfMaxError[a] << "," << t.minError[a] << ","
+       << t.primeOfMinError[a] << std::endl;
   return;
 }
 

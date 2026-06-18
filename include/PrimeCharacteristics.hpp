@@ -53,6 +53,10 @@ limit of primes we look for.
 
 void computeAll(const uint64_t upperBoundOfN, const uint64_t x);
 
+void* eThetaThread(void* arg);
+
+void computeAllWithMultiThreading(const uint64_t upperBoundOfN, const uint64_t x, int threadCount, std::vector<std::ostream*> outputFiles);
+
 /*
 finds the largest gap between two primes, given a list of primes.
 If the list has <= 1 elements then it returns 0.
@@ -78,9 +82,9 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x);
 
 */
 
-void eTheta(const uint64_t n, const uint64_t x);
+void eTheta(const uint64_t n, const uint64_t x, std::ostream* out);
 
-void outputHeaderForN(uint64_t n);
+void outputHeaderForN(uint64_t n, std::ostream* out);
 
 void updateErrorTerms(ThetaErrorInfo& t, uint64_t prime, uint64_t phin,
                       uint64_t n, uint64_t a);
@@ -96,10 +100,10 @@ long double denom(uint64_t x);
 long double numerator(uint64_t phin, uint64_t x);
 
 void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
-                ThetaErrorInfo& t, uint64_t phin);
+                ThetaErrorInfo& t, uint64_t phin, std::ostream* out);
 
 void outputErrorDataForCutoff(uint64_t cutoff, uint64_t a,
-                              const ThetaErrorInfo& t);
+                              const ThetaErrorInfo& t, std::ostream* out);
 
 long double error(long double thetaOfA, long double numerator,
                   long double denom);

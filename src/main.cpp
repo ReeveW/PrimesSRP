@@ -1,23 +1,29 @@
 #include <gmp.h>
+#include <pthread.h>
 
 #include <algorithm>
 #include <chrono>
 #include <iostream>
 #include <primesieve.hpp>
 #include <vector>
-#include <pthread.h>
 
 #include "PrimeCharacteristics.hpp"
 
 int main() {
-    const auto start{std::chrono::steady_clock::now()};
+  const auto start{std::chrono::steady_clock::now()};
 
-    computeAll(300, 1e9 + 1000);
+  std::ofstream file0("thread0.csv");
+  std::ofstream file1("thread1.csv");
+  std::ofstream file2("thread2.csv");
+  std::ofstream file3("thread3.csv");
 
-    const auto finish{std::chrono::steady_clock::now()};
-    const std::chrono::duration<double> elapsed_seconds{finish - start};
-    std::cout << "time to compute: " << elapsed_seconds.count() << std::endl;
-  
+  std::vector<std::ostream*> outputs = {&file0, &file1, &file2, &file3};
+
+  computeAllWithMultiThreading(4, 10000, 4, outputs);
+
+  const auto finish{std::chrono::steady_clock::now()};
+  const std::chrono::duration<double> elapsed_seconds{finish - start};
+  std::cout << "time to compute: " << elapsed_seconds.count() << std::endl;
 
   return 0;
 }
