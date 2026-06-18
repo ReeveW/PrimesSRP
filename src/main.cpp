@@ -19,7 +19,9 @@ int main() {
 
   std::vector<std::ostream*> outputs = {&file0, &file1, &file2, &file3};
 
-  computeAllWithMultiThreading(4, 10000, 4, outputs);
+  computeAllWithMultiThreading(4, 400, 4, outputs);
+
+  // eTheta(4, 1000, &file0);
 
   const auto finish{std::chrono::steady_clock::now()};
   const std::chrono::duration<double> elapsed_seconds{finish - start};

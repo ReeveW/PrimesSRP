@@ -8,15 +8,23 @@ void computeAll(const uint64_t upperBoundOfN, const uint64_t x) {
   delete out;
 }
 
+void computeAllThread(uint64_t start, uint64_t end, uint64_t x,
+                      std::ostream* out) {
+  for (uint64_t i = start; i < end; ++i) {
+    eTheta(i, x, out);
+  }
+  return;
+}
+
 struct ThreadData {
-  uint64_t x, n;
+  uint64_t x, start, end;
   std::ostream* output;
 };
 
 void* eThetaThread(void* arg) {
   ThreadData* data = static_cast<ThreadData*>(arg);
 
-  eTheta(data->n, data->x, data->output);
+  computeAllThread(data->start, data->end, data->x, data->output);
 
   return nullptr;
 }
@@ -25,21 +33,23 @@ void* eThetaThread(void* arg) {
 void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
                                   const uint64_t x, int threadCount,
                                   std::vector<std::ostream*> outputFiles) {
-  uint64_t iterations = upperBoundOfN / threadCount;
-  std::vector<pthread_t> v(threadCount);
-  std::vector<ThreadData> threadData(threadCount);
-  for (int i = 0; i < iterations; ++i) {
-    for (int j = 0; j < v.size(); ++j) {
-      uint64_t n = i + (j * iterations);
-      if (n == 0 || n == 1) continue;
-      threadData[j] = {n, x, outputFiles[j]};
-      pthread_create(&v[j], nullptr, eThetaThread, &threadData[j]);
-    }
-    for (auto& x : v) {
-      pthread_join(x, nullptr);
-    }
+  std::vector<pthread_t> threads(threadCount);
+  std::vector<ThreadData> data(threadCount);
+
+  uint64_t chunk = upperBoundOfN / threadCount;
+
+  for (int j = 0; j < threadCount; ++j) {
+    uint64_t start = std::max(j * chunk, 2UL);
+    uint64_t end = (j + 1) * chunk;
+
+    data[j] = {x, start, end, outputFiles[j]};
+
+    pthread_create(&threads[j], nullptr, eThetaThread, &data[j]);
   }
-  return;
+
+  for (auto& t : threads) {
+    pthread_join(t, nullptr);
+  }
 }
 
 void eTheta(const uint64_t n, const uint64_t x, std::ostream* out) {
@@ -184,17 +194,6 @@ uint64_t phi(const uint64_t n) {
 long double error(long double thetaOfA, long double numerator,
                   long double denom) {
   return (thetaOfA - numerator) / denom;
-}
-
-uint64_t largestGap(const std::vector<uint64_t>& primes) {
-  if (primes.size() <= 1) {
-    return 0;
-  }
-  uint64_t gap = 0;
-  for (int i = 0; i < primes.size() - 1; ++i) {
-    gap = std::max(gap, primes[i + 1] - primes[i]);
-  }
-  return gap;
 }
 
 std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x) {

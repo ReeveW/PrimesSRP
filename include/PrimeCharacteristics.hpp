@@ -58,14 +58,6 @@ void* eThetaThread(void* arg);
 void computeAllWithMultiThreading(const uint64_t upperBoundOfN, const uint64_t x, int threadCount, std::vector<std::ostream*> outputFiles);
 
 /*
-finds the largest gap between two primes, given a list of primes.
-If the list has <= 1 elements then it returns 0.
-This is purely to get a feel for things like primesieve and time benchmarks.
-*/
-
-uint64_t largestGap(const std::vector<uint64_t>& primes);
-
-/*
 Computes the number of primes in each arithmetic progression
 Inputs: x - the upper limit of primes we look for.
         n - the modulus with which we use to find a.
@@ -116,10 +108,3 @@ to n.
 */
 
 uint64_t phi(const uint64_t n);
-
-/*
-adds up all the values in a vector. Used to verify that the number of primes
-adds up when testing function primesModN.
-*/
-
-int add(const std::vector<uint64_t>& v);
