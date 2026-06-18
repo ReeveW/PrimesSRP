@@ -19,7 +19,7 @@ int main() {
 
   std::vector<std::ostream*> outputs = {&file0, &file1, &file2, &file3};
 
-  computeAllWithMultiThreading(4, 400, 4, outputs);
+  computeAllWithMultiThreading(100, 1e9, 4, outputs);
 
   // eTheta(4, 1000, &file0);
 
