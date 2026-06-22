@@ -3,14 +3,14 @@
 
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <numeric>
 #include <primesieve.hpp>
 #include <unordered_map>
 #include <vector>
-#include <iomanip>
-#include <fstream>
 
 struct OutlierInfo {
   uint64_t a;
@@ -55,7 +55,12 @@ void computeAll(const uint64_t upperBoundOfN, const uint64_t x);
 
 void* eThetaThread(void* arg);
 
-void computeAllWithMultiThreading(const uint64_t upperBoundOfN, const uint64_t x, int threadCount, std::vector<std::ostream*> outputFiles);
+void computeAllThread(uint64_t end, uint64_t increment, uint64_t x,
+                      std::ostream* out);
+
+void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
+                                  const uint64_t x, uint64_t threadCount,
+                                  std::vector<std::ostream*> outputFiles);
 
 /*
 Computes the number of primes in each arithmetic progression

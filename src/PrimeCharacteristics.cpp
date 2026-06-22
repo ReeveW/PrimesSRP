@@ -8,41 +8,41 @@ void computeAll(const uint64_t upperBoundOfN, const uint64_t x) {
   delete out;
 }
 
-void computeAllThread(uint64_t start, uint64_t end, uint64_t x,
+void computeAllThread(uint64_t start, uint64_t end, uint64_t increment, uint64_t x,
                       std::ostream* out) {
-  for (uint64_t i = start; i < end; ++i) {
-    eTheta(i, x, out);
+  for (uint64_t n = start; n <= end; n += increment) {
+    eTheta(n, x, out);
   }
   return;
 }
 
 struct ThreadData {
-  uint64_t x, start, end;
+  uint64_t start, x, end, increment;
   std::ostream* output;
 };
 
 void* eThetaThread(void* arg) {
   ThreadData* data = static_cast<ThreadData*>(arg);
 
-  computeAllThread(data->start, data->end, data->x, data->output);
+  computeAllThread(data->start, data->end, data->increment, data->x, data->output);
 
   return nullptr;
 }
 
-// works wierdly if upperBoundOfN is not divisible by threadCount
 void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
-                                  const uint64_t x, int threadCount,
+                                  const uint64_t x, uint64_t threadCount,
                                   std::vector<std::ostream*> outputFiles) {
   std::vector<pthread_t> threads(threadCount);
   std::vector<ThreadData> data(threadCount);
 
   uint64_t chunk = upperBoundOfN / threadCount;
-
-  for (int j = 0; j < threadCount; ++j) {
-    uint64_t start = std::max(j * chunk, 2UL);
-    uint64_t end = (j + 1) * chunk;
-
-    data[j] = {x, start, end, outputFiles[j]};
+  uint64_t end = upperBoundOfN;
+  for (uint64_t j = 0; j < threadCount; ++j) {
+    uint64_t start = j;
+    if(start < 2){
+      start += threadCount;
+    }
+    data[j] = {start, x, end, threadCount, outputFiles[j]};
 
     pthread_create(&threads[j], nullptr, eThetaThread, &data[j]);
   }
