@@ -32,9 +32,12 @@ void* eThetaThread(void* arg) {
 
 void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
                                   const uint64_t x, uint64_t threadCount,
+                                  bool primePowers,
                                   std::vector<std::ostream*> outputFiles) {
   std::vector<pthread_t> threads(threadCount);
   std::vector<ThreadData> data(threadCount);
+
+  PreComputedPrimeIterator p = PreComputedPrimeIterator(x, primePowers);
 
   uint64_t chunk = upperBoundOfN / threadCount;
   uint64_t end = upperBoundOfN;
@@ -59,14 +62,14 @@ void eTheta(const uint64_t n, const uint64_t x, std::ostream* out) {
                                    10000000,    100000000,    1000000000,
                                    10000000000, 100000000000, 1000000000000};
   int currentCutoff = 0;
-  primesieve::iterator it;
+  PreComputedPrimeIterator p = PreComputedPrimeIterator();
   uint64_t prime;
   ThetaErrorInfo t(n, cutoffs.size());
   uint64_t phin = phi(n);
 
   outputHeaderForN(n, out);
 
-  while ((prime = it.next_prime()) < x) {
+  while ((prime = p.next_prime()) < x) {
     if (prime > cutoffs[currentCutoff]) {
       nextCutoff(cutoffs, currentCutoff, n, t, phin, out);
     }

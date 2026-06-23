@@ -1,7 +1,6 @@
 #pragma once
 
-#include <primesieve.hpp>
-
+#include <PrimeGeneration.hpp>
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -9,9 +8,8 @@
 #include <iostream>
 #include <limits>
 #include <numeric>
+#include <primesieve.hpp>
 #include <vector>
-
-#include <PrimeGeneration.hpp>
 
 struct OutlierInfo {
   uint64_t a;
@@ -61,20 +59,8 @@ void computeAllThread(uint64_t start, uint64_t end, uint64_t increment,
 
 void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
                                   const uint64_t x, uint64_t threadCount,
+                                  bool primePowers,
                                   std::vector<std::ostream*> outputFiles);
-
-/*
-Computes the number of primes in each arithmetic progression
-Inputs: x - the upper limit of primes we look for.
-        n - the modulus with which we use to find a.
-For each prime (p) < x, this function updates the characteristics of a (p mod
-n), such as incrementing count[a].
-time complexity: O(pi(x)), as the operations we perform in the while loop take
-constant time. returns a vector of size n, which is the number of arithmetic
-progressions we use.
-*/
-
-std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x);
 
 /*
 
@@ -114,3 +100,16 @@ to n.
 */
 
 uint64_t phi(const uint64_t n);
+
+/*
+Computes the number of primes in each arithmetic progression
+Inputs: x - the upper limit of primes we look for.
+        n - the modulus with which we use to find a.
+For each prime (p) < x, this function updates the characteristics of a (p mod
+n), such as incrementing count[a].
+time complexity: O(pi(x)), as the operations we perform in the while loop take
+constant time. returns a vector of size n, which is the number of arithmetic
+progressions we use.
+*/
+
+std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x);

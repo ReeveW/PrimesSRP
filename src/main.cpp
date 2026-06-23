@@ -20,18 +20,18 @@ int main() {
 
   std::vector<std::ostream*> outputs = {&file0, &file1, &file2, &file3};
 
-  computeAllWithMultiThreading(123, 1e7, 4, outputs);
-
-  // eTheta(4, 1000, &file0);
+  computeAllWithMultiThreading(123, 1e7, 4, false, outputs);
 
   const auto finish{std::chrono::steady_clock::now()};
   const std::chrono::duration<double> elapsed_seconds{finish - start};
   std::cout << "time to compute: " << elapsed_seconds.count() << std::endl;
 
-  fillPrimeListWithPowers(100);
-  for(auto& x : primePowerList){
-    std::cout << x.value << " ";
-  }
+  // PreComputedPrimeIterator p = PreComputedPrimeIterator(1000, true);
+  // uint64_t x;
+  // while((x = p.next_prime()) < 1000){
+  //   std::cout << x << " ";
+  // }
+  // std::cout << std::endl;
 
   return 0;
 }
