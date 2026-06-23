@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "PrimeCharacteristics.hpp"
+#include "PrimeGeneration.hpp"
 
 int main() {
   const auto start{std::chrono::steady_clock::now()};
@@ -19,13 +20,18 @@ int main() {
 
   std::vector<std::ostream*> outputs = {&file0, &file1, &file2, &file3};
 
-  computeAllWithMultiThreading(123, 1e8, 4, outputs);
+  computeAllWithMultiThreading(123, 1e7, 4, outputs);
 
   // eTheta(4, 1000, &file0);
 
   const auto finish{std::chrono::steady_clock::now()};
   const std::chrono::duration<double> elapsed_seconds{finish - start};
   std::cout << "time to compute: " << elapsed_seconds.count() << std::endl;
+
+  fillPrimeListWithPowers(100);
+  for(auto& x : primePowerList){
+    std::cout << x.value << " ";
+  }
 
   return 0;
 }

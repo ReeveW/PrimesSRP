@@ -8,8 +8,8 @@ void computeAll(const uint64_t upperBoundOfN, const uint64_t x) {
   delete out;
 }
 
-void computeAllThread(uint64_t start, uint64_t end, uint64_t increment, uint64_t x,
-                      std::ostream* out) {
+void computeAllThread(uint64_t start, uint64_t end, uint64_t increment,
+                      uint64_t x, std::ostream* out) {
   for (uint64_t n = start; n <= end; n += increment) {
     eTheta(n, x, out);
   }
@@ -24,7 +24,8 @@ struct ThreadData {
 void* eThetaThread(void* arg) {
   ThreadData* data = static_cast<ThreadData*>(arg);
 
-  computeAllThread(data->start, data->end, data->increment, data->x, data->output);
+  computeAllThread(data->start, data->end, data->increment, data->x,
+                   data->output);
 
   return nullptr;
 }
@@ -39,7 +40,7 @@ void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
   uint64_t end = upperBoundOfN;
   for (uint64_t j = 0; j < threadCount; ++j) {
     uint64_t start = j;
-    if(start < 2){
+    if (start < 2) {
       start += threadCount;
     }
     data[j] = {start, x, end, threadCount, outputFiles[j]};
@@ -125,17 +126,17 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
   uint64_t x = cutoffs[currentCutoff];
   long double d = denom(x);
   long double num = numerator(phin, x);
-  for (uint64_t i = 0; i < n; ++i) {
-    if (std::gcd(i, n) != 1) {
+  for (uint64_t a = 0; a < n; ++a) {
+    if (std::gcd(a, n) != 1) {
       continue;
     }
-    long double e = error(t.thetaInAP[i], num, d);
+    long double e = error(t.thetaInAP[a], num, d);
 
-    updateCutoffErrors(e, t, i, x, currentCutoff);
+    updateCutoffErrors(e, t, a, x, currentCutoff);
 
-    outputErrorDataForCutoff(x, i, t, out);
+    outputErrorDataForCutoff(x, a, t, out);
 
-    resetErrorForCutoff(e, t, i, x);
+    resetErrorForCutoff(e, t, a, x);
   }
   currentCutoff++;
   return;
@@ -217,12 +218,4 @@ std::vector<uint64_t> primesModN(const uint64_t n, const uint64_t x) {
     lastPrimeInAP[a] = prime / n;
   }
   return primeCountInAP;
-}
-
-int add(const std::vector<uint64_t>& v) {
-  int a = 0;
-  for (int i = 0; i < v.size(); ++i) {
-    a += v[i];
-  }
-  return a;
 }

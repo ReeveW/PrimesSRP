@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_library(prime_lib
     src/PrimeCharacteristics.cpp
+    src/PrimeGeneration.cpp
 )
 
 target_include_directories(prime_lib PUBLIC include)

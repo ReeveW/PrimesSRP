@@ -1,5 +1,6 @@
 #pragma once
-#include <gmp.h>
+
+#include <primesieve.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -8,9 +9,9 @@
 #include <iostream>
 #include <limits>
 #include <numeric>
-#include <primesieve.hpp>
-#include <unordered_map>
 #include <vector>
+
+#include <PrimeGeneration.hpp>
 
 struct OutlierInfo {
   uint64_t a;
@@ -55,8 +56,8 @@ void computeAll(const uint64_t upperBoundOfN, const uint64_t x);
 
 void* eThetaThread(void* arg);
 
-void computeAllThread(uint64_t end, uint64_t increment, uint64_t x,
-                      std::ostream* out);
+void computeAllThread(uint64_t start, uint64_t end, uint64_t increment,
+                      uint64_t x, std::ostream* out);
 
 void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
                                   const uint64_t x, uint64_t threadCount,
