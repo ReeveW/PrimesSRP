@@ -7,6 +7,8 @@ void computeAll(const uint64_t upperBoundOfN, const uint64_t x) {
     eTheta(i, x, out, a);
   }
   delete out;
+  delete a;
+  return;
 }
 
 void computeAllThread(uint64_t start, uint64_t end, uint64_t increment,
