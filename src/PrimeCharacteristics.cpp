@@ -2,38 +2,40 @@
 
 void computeAll(const uint64_t upperBoundOfN, const uint64_t x) {
   std::ofstream* out = new std::ofstream("error_data.csv");
+  std::ofstream* a = new std::ofstream("maxA.csv");
   for (int i = 2; i < upperBoundOfN; ++i) {
-    eTheta(i, x, out);
+    eTheta(i, x, out, a);
   }
   delete out;
 }
 
 void computeAllThread(uint64_t start, uint64_t end, uint64_t increment,
-                      uint64_t x, std::ostream* out) {
+                      uint64_t x, std::ostream* out,
+                      std::ostream* maxOverAOutput) {
   for (uint64_t n = start; n <= end; n += increment) {
-    eTheta(n, x, out);
+    eTheta(n, x, out, maxOverAOutput);
   }
   return;
 }
 
 struct ThreadData {
   uint64_t start, x, end, increment;
-  std::ostream* output;
+  std::ostream *output, *maxOverAOutput;
 };
 
 void* eThetaThread(void* arg) {
   ThreadData* data = static_cast<ThreadData*>(arg);
 
   computeAllThread(data->start, data->end, data->increment, data->x,
-                   data->output);
+                   data->output, data->maxOverAOutput);
 
   return nullptr;
 }
 
-void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
-                                  const uint64_t x, uint64_t threadCount,
-                                  bool primePowers,
-                                  std::vector<std::ostream*> outputFiles) {
+void computeAllWithMultiThreading(
+    const uint64_t upperBoundOfN, const uint64_t x, uint64_t threadCount,
+    bool primePowers, std::vector<std::ostream*> outputFiles,
+    std::vector<std::ostream*> maxOverAOutputFiles) {
   std::vector<pthread_t> threads(threadCount);
   std::vector<ThreadData> data(threadCount);
 
@@ -46,7 +48,8 @@ void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
     if (start < 2) {
       start += threadCount;
     }
-    data[j] = {start, x, end, threadCount, outputFiles[j]};
+    data[j] = {
+        start, x, end, threadCount, outputFiles[j], maxOverAOutputFiles[j]};
 
     pthread_create(&threads[j], nullptr, eThetaThread, &data[j]);
   }
@@ -56,7 +59,8 @@ void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
   }
 }
 
-void eTheta(const uint64_t n, const uint64_t x, std::ostream* out) {
+void eTheta(const uint64_t n, const uint64_t x, std::ostream* out,
+            std::ostream* maxOverAOutput) {
   std::vector<uint64_t> cutoffs = {10,          100,          1000,
                                    10000,       100000,       1000000,
                                    10000000,    100000000,    1000000000,
@@ -69,9 +73,11 @@ void eTheta(const uint64_t n, const uint64_t x, std::ostream* out) {
 
   outputHeaderForN(n, out);
 
+  *maxOverAOutput << "n = " << n << std::endl;
+
   while ((prime = p.next_prime()) < x) {
     if (prime > cutoffs[currentCutoff]) {
-      nextCutoff(cutoffs, currentCutoff, n, t, phin, out);
+      nextCutoff(cutoffs, currentCutoff, n, t, phin, out, maxOverAOutput);
     }
     uint64_t a = prime % n;
     updateErrorTerms(t, prime, phin, n, a);
@@ -125,10 +131,19 @@ long double numerator(uint64_t phin, uint64_t x) { return (1.0L / phin) * x; }
 
 // now no longer stops when we go past the last cutoff, is that a problem ever?
 void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
-                ThetaErrorInfo& t, uint64_t phin, std::ostream* out) {
+                ThetaErrorInfo& t, uint64_t phin, std::ostream* out,
+                std::ostream* maxOverAOutput) {
   uint64_t x = cutoffs[currentCutoff];
   long double d = denom(x);
   long double num = numerator(phin, x);
+
+  long double minOverAllA = 10000;
+  uint64_t aMin;
+  uint64_t aMinPrime;
+  long double maxOverAllA = -10000;
+  uint64_t aMax;
+  uint64_t aMaxPrime;
+
   for (uint64_t a = 0; a < n; ++a) {
     if (std::gcd(a, n) != 1) {
       continue;
@@ -137,10 +152,26 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
 
     updateCutoffErrors(e, t, a, x, currentCutoff);
 
+    if (minOverAllA > t.minError[a]) {
+      minOverAllA = t.minError[a];
+      aMin = a;
+      aMinPrime = t.primeOfMinError[a];
+    }
+    if (maxOverAllA < t.maxError[a]) {
+      maxOverAllA = t.maxError[a];
+      aMax = a;
+      aMaxPrime = t.primeOfMaxError[a];
+    }
+
     outputErrorDataForCutoff(x, a, t, out);
 
     resetErrorForCutoff(e, t, a, x);
   }
+
+  *maxOverAOutput << minOverAllA << "," << aMin << "," << aMinPrime << ","
+                  << maxOverAllA << "," << aMax << "," << aMaxPrime
+                  << std::endl;
+
   currentCutoff++;
   return;
 }

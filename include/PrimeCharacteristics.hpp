@@ -55,18 +55,20 @@ void computeAll(const uint64_t upperBoundOfN, const uint64_t x);
 void* eThetaThread(void* arg);
 
 void computeAllThread(uint64_t start, uint64_t end, uint64_t increment,
-                      uint64_t x, std::ostream* out);
+                      uint64_t x, std::ostream* out,
+                      std::ostream* maxOverAOutput);
 
-void computeAllWithMultiThreading(const uint64_t upperBoundOfN,
-                                  const uint64_t x, uint64_t threadCount,
-                                  bool primePowers,
-                                  std::vector<std::ostream*> outputFiles);
+void computeAllWithMultiThreading(
+    const uint64_t upperBoundOfN, const uint64_t x, uint64_t threadCount,
+    bool primePowers, std::vector<std::ostream*> outputFiles,
+    std::vector<std::ostream*> maxOverAOutputFiles);
 
 /*
 
 */
 
-void eTheta(const uint64_t n, const uint64_t x, std::ostream* out);
+void eTheta(const uint64_t n, const uint64_t x, std::ostream* out,
+            std::ostream* maxOverAOutput);
 
 void outputHeaderForN(uint64_t n, std::ostream* out);
 
@@ -84,7 +86,8 @@ long double denom(uint64_t x);
 long double numerator(uint64_t phin, uint64_t x);
 
 void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
-                ThetaErrorInfo& t, uint64_t phin, std::ostream* out);
+                ThetaErrorInfo& t, uint64_t phin, std::ostream* out,
+                std::ostream* maxOverAOutput);
 
 void outputErrorDataForCutoff(uint64_t cutoff, uint64_t a,
                               const ThetaErrorInfo& t, std::ostream* out);

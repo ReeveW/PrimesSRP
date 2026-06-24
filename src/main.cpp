@@ -20,7 +20,14 @@ int main() {
 
   std::vector<std::ostream*> outputs = {&file0, &file1, &file2, &file3};
 
-  computeAllWithMultiThreading(123, 1e7, 4, false, outputs);
+  std::ofstream afile0("Athread0.csv");
+  std::ofstream afile1("Athread1.csv");
+  std::ofstream afile2("Athread2.csv");
+  std::ofstream afile3("Athread3.csv");
+
+  std::vector<std::ostream*> aOutputs = {&afile0, &afile1, &afile2, &afile3};
+
+  computeAllWithMultiThreading(100, 1e7, 4, false, outputs, aOutputs);
 
   const auto finish{std::chrono::steady_clock::now()};
   const std::chrono::duration<double> elapsed_seconds{finish - start};
