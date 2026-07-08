@@ -70,7 +70,7 @@ class ThetaErrorTermDenominators {
   long double computeDenominator(uint64_t x) { return denominatorFunction(x); }
 };
 
-std::unique_ptr<ThetaErrorTermDenominators> computeDenom;
+extern std::unique_ptr<ThetaErrorTermDenominators> computeDenom;
 
 /*
 computes the primes mod n for all n less than upperBound, with x as the upper

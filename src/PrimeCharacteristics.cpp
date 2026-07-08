@@ -1,5 +1,7 @@
 #include "PrimeCharacteristics.hpp"
 
+std::unique_ptr<ThetaErrorTermDenominators> computeDenom;
+
 void computeAll(const uint64_t upperBoundOfN, const uint64_t x) {
   std::ofstream* out = new std::ofstream("error_data.csv");
   std::ofstream* a = new std::ofstream("maxA.csv");

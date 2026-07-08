@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
   }
   const auto start{std::chrono::steady_clock::now()};
 
-  computeAllWithMultiThreading(n, x, threads, primePowers, outputs, aOutputs);
+  computeAllWithMultiThreading(n, x, threads, primePowers, outputs, aOutputs, 0);
 
   const auto finish{std::chrono::steady_clock::now()};
   const std::chrono::duration<double> elapsed_seconds{finish - start};
