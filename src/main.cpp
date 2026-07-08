@@ -11,14 +11,25 @@
 #include "PrimeGeneration.hpp"
 
 int main(int argc, char* argv[]) {
-  if (argc != 5) {
-    std::cout << "Usage: ./main <x> <n> <threads> <0/1 for prime powers>\n";
+  if (argc < 4) {
+    std::cout << "Usage: ./main <x> <n> <threads> --commands (find in readme)\n";
     return 1;
   }
   uint64_t x = std::stoull(argv[1]);
   uint64_t n = std::stoull(argv[2]);
   int threads = std::stoi(argv[3]);
-  bool primePowers = std::stoi(argv[4]);
+
+  bool primePowers = false;
+  int whichDenom = 0;
+  for(int i = 4; i < argc; ++i){
+    std::string arg = argv[i];
+    if(arg == "--primePowers"){
+      primePowers = true;
+    }
+    if(arg == "--sqrt"){
+      whichDenom = 1;
+    }
+  }
 
   std::vector<std::ofstream> outputs;
 
@@ -38,7 +49,7 @@ int main(int argc, char* argv[]) {
   }
   const auto start{std::chrono::steady_clock::now()};
 
-  computeAllWithMultiThreading(n, x, threads, primePowers, outputs, aOutputs, 0);
+  computeAllWithMultiThreading(n, x, threads, primePowers, outputs, aOutputs, whichDenom);
 
   const auto finish{std::chrono::steady_clock::now()};
   const std::chrono::duration<double> elapsed_seconds{finish - start};

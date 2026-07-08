@@ -11,6 +11,7 @@
 #include <numeric>
 #include <primesieve.hpp>
 #include <vector>
+#include <stdexcept>
 
 const int ERROR_DECIMAL_PRECISION = 30;
 
@@ -57,20 +58,17 @@ struct allAErrorData {
   uint64_t aMaxPrime;
 };
 
-// make it a default constructor, then have a setter which takes an int and
-// turns it into the denom function
-// move this to a seperate file along with the denom functions
 class ThetaErrorTermDenominators {
  private:
   long double (*denominatorFunction)(uint64_t);
 
  public:
-  ThetaErrorTermDenominators(long double (*f)(uint64_t))
-      : denominatorFunction(f) {}
+  ThetaErrorTermDenominators() = default;
   long double computeDenominator(uint64_t x) { return denominatorFunction(x); }
+  void setDenominator(int whichDenominator);
 };
 
-extern std::unique_ptr<ThetaErrorTermDenominators> computeDenom;
+extern ThetaErrorTermDenominators denominator;
 
 /*
 computes the primes mod n for all n less than upperBound, with x as the upper

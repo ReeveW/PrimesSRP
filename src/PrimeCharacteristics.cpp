@@ -1,6 +1,6 @@
 #include "PrimeCharacteristics.hpp"
 
-std::unique_ptr<ThetaErrorTermDenominators> computeDenom;
+ThetaErrorTermDenominators denominator;
 
 void computeAll(const uint64_t upperBoundOfN, const uint64_t x) {
   std::ofstream* out = new std::ofstream("error_data.csv");
@@ -36,10 +36,14 @@ void* eThetaThread(void* arg) {
   return nullptr;
 }
 
-void setDenominator(int whichDenominator){
+void ThetaErrorTermDenominators::setDenominator(int whichDenominator){
   if(whichDenominator == 0){
-    computeDenom = std::make_unique<ThetaErrorTermDenominators>(tripleLogDenom);
+    denominatorFunction = tripleLogDenom;
   }
+  else {
+    throw std::runtime_error("denominator you tried to select doesn't exist");
+  }
+  return;
 }
 
 void computeAllWithMultiThreading(
@@ -51,7 +55,7 @@ void computeAllWithMultiThreading(
 
   PreComputedPrimeIterator p = PreComputedPrimeIterator(x, primePowers);
 
-  setDenominator(whichDenominator);
+  denominator.setDenominator(whichDenominator);
 
   uint64_t chunk = upperBoundOfN / threadCount;
   uint64_t end = upperBoundOfN;
@@ -119,7 +123,7 @@ void outputHeaderForN(uint64_t n, std::ostream* out) {
 
 void updateErrorTerms(ThetaErrorInfo& t, uint64_t prime, uint64_t phin,
                       uint64_t n, uint64_t a) {
-  long double d = computeDenom->computeDenominator(prime);
+  long double d = denominator.computeDenominator(prime);
   long double num = numerator(phin, prime);
 
   long double currentMin = error(t.thetaInAP[a], num, d);
@@ -149,7 +153,7 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
                 ThetaErrorInfo& t, uint64_t phin, std::ostream* out,
                 std::ostream* maxOverAOutput) {
   uint64_t x = cutoffs[currentCutoff];
-  long double d = computeDenom->computeDenominator(x);
+  long double d = denominator.computeDenominator(x);
   long double num = numerator(phin, x);
 
   allAErrorData allA;
