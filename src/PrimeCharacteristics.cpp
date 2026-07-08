@@ -34,14 +34,22 @@ void* eThetaThread(void* arg) {
   return nullptr;
 }
 
+void setDenominator(int whichDenominator){
+  if(whichDenominator == 0){
+    computeDenom = std::make_unique<ThetaErrorTermDenominators>(tripleLogDenom);
+  }
+}
+
 void computeAllWithMultiThreading(
     const uint64_t upperBoundOfN, const uint64_t x, uint64_t threadCount,
-    bool primePowers, std::vector<std::ostream*> outputFiles,
-    std::vector<std::ostream*> maxOverAOutputFiles) {
+    bool primePowers, std::vector<std::ofstream>& outputFiles,
+    std::vector<std::ofstream>& maxOverAOutputFiles, int whichDenominator) {
   std::vector<pthread_t> threads(threadCount);
   std::vector<ThreadData> data(threadCount);
 
   PreComputedPrimeIterator p = PreComputedPrimeIterator(x, primePowers);
+
+  setDenominator(whichDenominator);
 
   uint64_t chunk = upperBoundOfN / threadCount;
   uint64_t end = upperBoundOfN;
@@ -51,7 +59,7 @@ void computeAllWithMultiThreading(
       start += threadCount;
     }
     data[j] = {
-        start, x, end, threadCount, outputFiles[j], maxOverAOutputFiles[j]};
+        start, x, end, threadCount, &outputFiles[j], &maxOverAOutputFiles[j]};
 
     pthread_create(&threads[j], nullptr, eThetaThread, &data[j]);
   }
@@ -93,6 +101,9 @@ void eTheta(const uint64_t n, const uint64_t x, std::ostream* out,
     }
     t.lastPrimeInAP[a] = prime;
   }
+
+  // make it so that once we hit x, we treat it as another cutoff and output
+  // error terms
   return;
 }
 
@@ -106,7 +117,7 @@ void outputHeaderForN(uint64_t n, std::ostream* out) {
 
 void updateErrorTerms(ThetaErrorInfo& t, uint64_t prime, uint64_t phin,
                       uint64_t n, uint64_t a) {
-  long double d = denom(prime);
+  long double d = computeDenom->computeDenominator(prime);
   long double num = numerator(phin, prime);
 
   long double currentMin = error(t.thetaInAP[a], num, d);
@@ -124,7 +135,7 @@ void updateErrorTerms(ThetaErrorInfo& t, uint64_t prime, uint64_t phin,
   return;
 }
 
-long double denom(uint64_t x) {
+long double tripleLogDenom(uint64_t x) {
   return std::sqrt(x) *
          std::pow(std::log(std::log(std::log(static_cast<long double>(x)))), 2);
 }
@@ -136,15 +147,10 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
                 ThetaErrorInfo& t, uint64_t phin, std::ostream* out,
                 std::ostream* maxOverAOutput) {
   uint64_t x = cutoffs[currentCutoff];
-  long double d = denom(x);
+  long double d = computeDenom->computeDenominator(x);
   long double num = numerator(phin, x);
 
-  long double minOverAllA = 10000;
-  uint64_t aMin;
-  uint64_t aMinPrime;
-  long double maxOverAllA = -10000;
-  uint64_t aMax;
-  uint64_t aMaxPrime;
+  allAErrorData allA;
 
   for (uint64_t a = 0; a < n; ++a) {
     if (std::gcd(a, n) != 1) {
@@ -154,15 +160,15 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
 
     updateCutoffErrors(e, t, a, x, currentCutoff);
 
-    if (minOverAllA > t.minError[a]) {
-      minOverAllA = t.minError[a];
-      aMin = a;
-      aMinPrime = t.primeOfMinError[a];
+    if (allA.minOverAllA > t.minError[a]) {
+      allA.minOverAllA = t.minError[a];
+      allA.aMin = a;
+      allA.aMinPrime = t.primeOfMinError[a];
     }
-    if (maxOverAllA < t.maxError[a]) {
-      maxOverAllA = t.maxError[a];
-      aMax = a;
-      aMaxPrime = t.primeOfMaxError[a];
+    if (allA.maxOverAllA < t.maxError[a]) {
+      allA.maxOverAllA = t.maxError[a];
+      allA.aMax = a;
+      allA.aMaxPrime = t.primeOfMaxError[a];
     }
 
     outputErrorDataForCutoff(x, a, t, out);
@@ -170,19 +176,27 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
     resetErrorForCutoff(e, t, a, x);
   }
 
-  *maxOverAOutput << minOverAllA << "," << aMin << "," << aMinPrime << ","
-                  << maxOverAllA << "," << aMax << "," << aMaxPrime
-                  << std::endl;
+  outputErrorOverAllA(x, allA, maxOverAOutput);
 
   currentCutoff++;
   return;
+}
+
+void outputErrorOverAllA(uint64_t cutoff, allAErrorData allA,
+                         std::ostream* out) {
+  *out << std::scientific << std::setprecision(0)
+       << static_cast<long double>(cutoff) << "," << std::defaultfloat
+       << allA.aMax << "," << std::defaultfloat << allA.aMaxPrime << ","
+       << std::fixed << std::setprecision(ERROR_DECIMAL_PRECISION) << allA.maxOverAllA << ","
+       << std::defaultfloat << allA.aMin << "," << std::defaultfloat
+       << allA.aMinPrime << "," << allA.minOverAllA << std::endl;
 }
 
 void outputErrorDataForCutoff(uint64_t cutoff, uint64_t a,
                               const ThetaErrorInfo& t, std::ostream* out) {
   *out << std::scientific << std::setprecision(0)
        << static_cast<long double>(cutoff) << "," << std::defaultfloat << a
-       << "," << std::fixed << std::setprecision(10) << t.maxError[a] << ","
+       << "," << std::fixed << std::setprecision(ERROR_DECIMAL_PRECISION) << t.maxError[a] << ","
        << t.primeOfMaxError[a] << "," << t.minError[a] << ","
        << t.primeOfMinError[a] << std::endl;
   return;

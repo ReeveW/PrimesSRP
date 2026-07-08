@@ -7,9 +7,12 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <primesieve.hpp>
 #include <vector>
+
+const int ERROR_DECIMAL_PRECISION = 30;
 
 struct OutlierInfo {
   uint64_t a;
@@ -45,6 +48,30 @@ struct ThetaErrorInfo {
         largestGapInAP(n, 0) {}
 };
 
+struct allAErrorData {
+  long double minOverAllA = 10000;
+  uint64_t aMin;
+  uint64_t aMinPrime;
+  long double maxOverAllA = -10000;
+  uint64_t aMax;
+  uint64_t aMaxPrime;
+};
+
+// make it a default constructor, then have a setter which takes an int and
+// turns it into the denom function
+// move this to a seperate file along with the denom functions
+class ThetaErrorTermDenominators {
+ private:
+  long double (*denominatorFunction)(uint64_t);
+
+ public:
+  ThetaErrorTermDenominators(long double (*f)(uint64_t))
+      : denominatorFunction(f) {}
+  long double computeDenominator(uint64_t x) { return denominatorFunction(x); }
+};
+
+std::unique_ptr<ThetaErrorTermDenominators> computeDenom;
+
 /*
 computes the primes mod n for all n less than upperBound, with x as the upper
 limit of primes we look for.
@@ -60,8 +87,8 @@ void computeAllThread(uint64_t start, uint64_t end, uint64_t increment,
 
 void computeAllWithMultiThreading(
     const uint64_t upperBoundOfN, const uint64_t x, uint64_t threadCount,
-    bool primePowers, std::vector<std::ostream*> outputFiles,
-    std::vector<std::ostream*> maxOverAOutputFiles);
+    bool primePowers, std::vector<std::ofstream>& outputFiles,
+    std::vector<std::ofstream>& maxOverAOutputFiles, int whichDenominator);
 
 /*
 
@@ -81,13 +108,16 @@ void resetErrorForCutoff(long double e, ThetaErrorInfo& t, uint64_t i,
 void updateCutoffErrors(long double e, ThetaErrorInfo& t, uint64_t i,
                         uint64_t x, int currentCutoff);
 
-long double denom(uint64_t x);
+long double tripleLogDenom(uint64_t x);
 
 long double numerator(uint64_t phin, uint64_t x);
 
 void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
                 ThetaErrorInfo& t, uint64_t phin, std::ostream* out,
                 std::ostream* maxOverAOutput);
+
+void outputErrorOverAllA(uint64_t cutoff, allAErrorData allA,
+                         std::ostream* out);
 
 void outputErrorDataForCutoff(uint64_t cutoff, uint64_t a,
                               const ThetaErrorInfo& t, std::ostream* out);
