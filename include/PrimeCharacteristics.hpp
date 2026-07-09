@@ -1,6 +1,8 @@
 #pragma once
 
-#include <PrimeGeneration.hpp>
+#include "PrimeGeneration.hpp"
+#include "Denominators.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -58,18 +60,6 @@ struct allAErrorData {
   uint64_t aMaxPrime;
 };
 
-class ThetaErrorTermDenominators {
- private:
-  long double (*denominatorFunction)(uint64_t);
-
- public:
-  ThetaErrorTermDenominators() = default;
-  long double computeDenominator(uint64_t x) { return denominatorFunction(x); }
-  void setDenominator(int whichDenominator);
-};
-
-extern ThetaErrorTermDenominators denominator;
-
 /*
 computes the primes mod n for all n less than upperBound, with x as the upper
 limit of primes we look for.
@@ -105,8 +95,6 @@ void resetErrorForCutoff(long double e, ThetaErrorInfo& t, uint64_t i,
 
 void updateCutoffErrors(long double e, ThetaErrorInfo& t, uint64_t i,
                         uint64_t x, int currentCutoff);
-
-long double tripleLogDenom(uint64_t x);
 
 long double numerator(uint64_t phin, uint64_t x);
 

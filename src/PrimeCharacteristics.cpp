@@ -1,7 +1,5 @@
 #include "PrimeCharacteristics.hpp"
 
-ThetaErrorTermDenominators denominator;
-
 void computeAll(const uint64_t upperBoundOfN, const uint64_t x) {
   std::ofstream* out = new std::ofstream("error_data.csv");
   std::ofstream* a = new std::ofstream("maxA.csv");
@@ -34,16 +32,6 @@ void* eThetaThread(void* arg) {
                    data->output, data->maxOverAOutput);
 
   return nullptr;
-}
-
-void ThetaErrorTermDenominators::setDenominator(int whichDenominator){
-  if(whichDenominator == 0){
-    denominatorFunction = tripleLogDenom;
-  }
-  else {
-    throw std::runtime_error("denominator you tried to select doesn't exist");
-  }
-  return;
 }
 
 void computeAllWithMultiThreading(
@@ -139,11 +127,6 @@ void updateErrorTerms(ThetaErrorInfo& t, uint64_t prime, uint64_t phin,
   }
 
   return;
-}
-
-long double tripleLogDenom(uint64_t x) {
-  return std::sqrt(x) *
-         std::pow(std::log(std::log(std::log(static_cast<long double>(x)))), 2);
 }
 
 long double numerator(uint64_t phin, uint64_t x) { return (1.0L / phin) * x; }
