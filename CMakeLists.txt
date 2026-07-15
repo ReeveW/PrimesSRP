@@ -17,6 +17,7 @@ target_include_directories(prime_lib PUBLIC include)
 target_link_libraries(prime_lib
     primesieve
     gmp
+    pthread
 )
 
 # Main executable
