@@ -14,6 +14,10 @@ add_library(prime_lib
 
 target_include_directories(prime_lib PUBLIC include)
 
+target_link_directories(prime_lib PRIVATE
+    $ENV{HOME}/.local/lib64
+)
+
 target_link_libraries(prime_lib
     primesieve
     gmp
