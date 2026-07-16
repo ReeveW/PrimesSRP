@@ -1,7 +1,9 @@
 # PrimesSRP
 
 
-# How to Build:
+# How to Build On Eudoxus:
+
+Run the following commands
 ```bash
 cd ~/PrimesSRP
 rm -rf build
@@ -22,6 +24,6 @@ For example:
 ```bash
 ./main 1000 25 4 --PrimePowers
 ```
-will run the experiment on all primes up to 1000, and it will be run on all n between 2 and 24.
+will run the experiment on all primes up to 1000, and it will be run on all n between 2 and 25.
 
 It will use 4 threads, and will include prime powers as well as regular primes.
