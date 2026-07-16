@@ -16,13 +16,28 @@ void ThetaErrorTermDenominators::setDenominator(int whichDenominator) {
   return;
 }
 
+long double ThetaErrorTermDenominators::computeDenominator(uint64_t x){
+  if(!denominatorFunction){
+    throw std::runtime_error("Denominator hasn't been set yet");
+  }
+  return denominatorFunction(x);
+}
+
+long double ThetaErrorTermDenominators::singleLogDenom(uint64_t x) {
+  return std::sqrt(static_cast<long double>(x)) *
+         std::pow(std::log(static_cast<long double>(x)), 2);
+}
+
+long double ThetaErrorTermDenominators::doubleLogDenom(uint64_t x) {
+  return std::sqrt(static_cast<long double>(x)) *
+         std::pow(std::log(std::log(static_cast<long double>(x))), 2);
+}
+
 long double ThetaErrorTermDenominators::tripleLogDenom(uint64_t x) {
   return std::sqrt(static_cast<long double>(x)) *
          std::pow(std::log(std::log(std::log(static_cast<long double>(x)))), 2);
 }
 
 long double ThetaErrorTermDenominators::sqrtDenom(uint64_t x) {
-    return std::sqrt(static_cast<long double>(x));
+  return std::sqrt(static_cast<long double>(x));
 }
-
-

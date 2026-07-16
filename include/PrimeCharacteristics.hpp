@@ -1,8 +1,5 @@
 #pragma once
 
-#include "PrimeGeneration.hpp"
-#include "Denominators.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -12,8 +9,11 @@
 #include <memory>
 #include <numeric>
 #include <primesieve.hpp>
-#include <vector>
 #include <stdexcept>
+#include <vector>
+
+#include "Denominators.hpp"
+#include "PrimeGeneration.hpp"
 
 const int ERROR_DECIMAL_PRECISION = 30;
 
@@ -71,19 +71,24 @@ void* eThetaThread(void* arg);
 
 void computeAllThread(uint64_t start, uint64_t end, uint64_t increment,
                       uint64_t x, std::ostream* out,
-                      std::ostream* maxOverAOutput);
+                      std::ostream* maxOverAOutput,
+                      std::ostream* largestGapOutput,
+                      std::ostream* firstPrimeOutput);
 
 void computeAllWithMultiThreading(
     const uint64_t upperBoundOfN, const uint64_t x, uint64_t threadCount,
     bool primePowers, std::vector<std::ofstream>& outputFiles,
-    std::vector<std::ofstream>& maxOverAOutputFiles, int whichDenominator);
+    std::vector<std::ofstream>& maxOverAOutputFiles,
+    std::vector<std::ofstream>& largestGapFile,
+    std::vector<std::ofstream>& firstPrimeFile, int whichDenominator);
 
 /*
 
 */
 
 void eTheta(const uint64_t n, const uint64_t x, std::ostream* out,
-            std::ostream* maxOverAOutput);
+            std::ostream* maxOverAOutput, std::ostream* largestGapOutput,
+            std::ostream* firstPrimeOutput);
 
 void outputHeaderForN(uint64_t n, std::ostream* out);
 
@@ -100,7 +105,14 @@ long double numerator(uint64_t phin, uint64_t x);
 
 void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
                 ThetaErrorInfo& t, uint64_t phin, std::ostream* out,
-                std::ostream* maxOverAOutput);
+                std::ostream* maxOverAOutput, std::ostream* largestGapOutput,
+                std::ostream* firstPrimeOutput);
+
+void outputFirstPrimeForCutoff(uint64_t cutoff, uint64_t a,
+                               const ThetaErrorInfo& t, std::ostream* out);
+
+void outputLargestGapForCutoff(uint64_t cutoff, uint64_t a,
+                               const ThetaErrorInfo& t, std::ostream* out);
 
 void outputErrorOverAllA(uint64_t cutoff, allAErrorData allA,
                          std::ostream* out);

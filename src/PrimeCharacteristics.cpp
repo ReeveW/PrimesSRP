@@ -1,35 +1,27 @@
 #include "PrimeCharacteristics.hpp"
 
-void computeAll(const uint64_t upperBoundOfN, const uint64_t x) {
-  std::ofstream* out = new std::ofstream("error_data.csv");
-  std::ofstream* a = new std::ofstream("maxA.csv");
-  for (int i = 2; i < upperBoundOfN; ++i) {
-    eTheta(i, x, out, a);
-  }
-  delete out;
-  delete a;
-  return;
-}
-
 void computeAllThread(uint64_t start, uint64_t end, uint64_t increment,
                       uint64_t x, std::ostream* out,
-                      std::ostream* maxOverAOutput) {
+                      std::ostream* maxOverAOutput,
+                      std::ostream* largestGapOutput,
+                      std::ostream* firstPrimeOutput) {
   for (uint64_t n = start; n <= end; n += increment) {
-    eTheta(n, x, out, maxOverAOutput);
+    eTheta(n, x, out, maxOverAOutput, largestGapOutput, firstPrimeOutput);
   }
   return;
 }
 
 struct ThreadData {
   uint64_t start, x, end, increment;
-  std::ostream *output, *maxOverAOutput;
+  std::ostream *output, *maxOverAOutput, *largestGapOutput, *firstPrimeOutput;
 };
 
 void* eThetaThread(void* arg) {
   ThreadData* data = static_cast<ThreadData*>(arg);
 
   computeAllThread(data->start, data->end, data->increment, data->x,
-                   data->output, data->maxOverAOutput);
+                   data->output, data->maxOverAOutput, data->largestGapOutput,
+                   data->firstPrimeOutput);
 
   return nullptr;
 }
@@ -37,7 +29,9 @@ void* eThetaThread(void* arg) {
 void computeAllWithMultiThreading(
     const uint64_t upperBoundOfN, const uint64_t x, uint64_t threadCount,
     bool primePowers, std::vector<std::ofstream>& outputFiles,
-    std::vector<std::ofstream>& maxOverAOutputFiles, int whichDenominator) {
+    std::vector<std::ofstream>& maxOverAOutputFiles,
+    std::vector<std::ofstream>& largestGapFile,
+    std::vector<std::ofstream>& firstPrimeFile, int whichDenominator) {
   std::vector<pthread_t> threads(threadCount);
   std::vector<ThreadData> data(threadCount);
 
@@ -52,8 +46,14 @@ void computeAllWithMultiThreading(
     if (start < 2) {
       start += threadCount;
     }
-    data[j] = {
-        start, x, end, threadCount, &outputFiles[j], &maxOverAOutputFiles[j]};
+    data[j] = {start,
+               x,
+               end,
+               threadCount,
+               &outputFiles[j],
+               &maxOverAOutputFiles[j],
+               &largestGapFile[j],
+               &firstPrimeFile[j]};
 
     pthread_create(&threads[j], nullptr, eThetaThread, &data[j]);
   }
@@ -64,7 +64,8 @@ void computeAllWithMultiThreading(
 }
 
 void eTheta(const uint64_t n, const uint64_t x, std::ostream* out,
-            std::ostream* maxOverAOutput) {
+            std::ostream* maxOverAOutput, std::ostream* largestGapOutput,
+            std::ostream* firstPrimeOutput) {
   std::vector<uint64_t> cutoffs = {10,          100,          1000,
                                    10000,       100000,       1000000,
                                    10000000,    100000000,    1000000000,
@@ -76,12 +77,15 @@ void eTheta(const uint64_t n, const uint64_t x, std::ostream* out,
   uint64_t phin = phi(n);
 
   outputHeaderForN(n, out);
+  outputHeaderForN(n, largestGapOutput);
+  outputHeaderForN(n, firstPrimeOutput);
 
   *maxOverAOutput << "n = " << n << std::endl;
 
   while ((prime = p.next_prime()) < x) {
     if (prime > cutoffs[currentCutoff]) {
-      nextCutoff(cutoffs, currentCutoff, n, t, phin, out, maxOverAOutput);
+      nextCutoff(cutoffs, currentCutoff, n, t, phin, out, maxOverAOutput,
+                 largestGapOutput, firstPrimeOutput);
     }
     uint64_t a = prime % n;
     updateErrorTerms(t, prime, phin, n, a);
@@ -134,7 +138,8 @@ long double numerator(uint64_t phin, uint64_t x) { return (1.0L / phin) * x; }
 // now no longer stops when we go past the last cutoff, is that a problem ever?
 void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
                 ThetaErrorInfo& t, uint64_t phin, std::ostream* out,
-                std::ostream* maxOverAOutput) {
+                std::ostream* maxOverAOutput, std::ostream* largestGapOutput,
+                std::ostream* firstPrimeOutput) {
   uint64_t x = cutoffs[currentCutoff];
   long double d = denominator.computeDenominator(x);
   long double num = numerator(phin, x);
@@ -161,6 +166,8 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
     }
 
     outputErrorDataForCutoff(x, a, t, out);
+    outputFirstPrimeForCutoff(x, a, t, firstPrimeOutput);
+    outputLargestGapForCutoff(x, a, t, largestGapOutput);
 
     resetErrorForCutoff(e, t, a, x);
   }
@@ -171,23 +178,40 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
   return;
 }
 
+void outputFirstPrimeForCutoff(uint64_t cutoff, uint64_t a,
+                               const ThetaErrorInfo& t, std::ostream* out) {
+  *out << std::scientific << std::setprecision(0)
+       << static_cast<long double>(cutoff) << "," << std::defaultfloat << a
+       << "," << std::defaultfloat << t.firstPrimeInAP[a] << std::endl;
+  return;
+}
+
+void outputLargestGapForCutoff(uint64_t cutoff, uint64_t a,
+                               const ThetaErrorInfo& t, std::ostream* out) {
+  *out << std::scientific << std::setprecision(0)
+       << static_cast<long double>(cutoff) << "," << std::defaultfloat << a
+       << "," << std::defaultfloat << t.largestGapInAP[a] << std::endl;
+  return;
+}
+
 void outputErrorOverAllA(uint64_t cutoff, allAErrorData allA,
                          std::ostream* out) {
   *out << std::scientific << std::setprecision(0)
        << static_cast<long double>(cutoff) << "," << std::defaultfloat
        << allA.aMax << "," << std::defaultfloat << allA.aMaxPrime << ","
-       << std::fixed << std::setprecision(ERROR_DECIMAL_PRECISION) << allA.maxOverAllA << ","
-       << std::defaultfloat << allA.aMin << "," << std::defaultfloat
-       << allA.aMinPrime << "," << allA.minOverAllA << std::endl;
+       << std::fixed << std::setprecision(ERROR_DECIMAL_PRECISION)
+       << allA.maxOverAllA << "," << std::defaultfloat << allA.aMin << ","
+       << std::defaultfloat << allA.aMinPrime << "," << allA.minOverAllA
+       << std::endl;
 }
 
 void outputErrorDataForCutoff(uint64_t cutoff, uint64_t a,
                               const ThetaErrorInfo& t, std::ostream* out) {
   *out << std::scientific << std::setprecision(0)
        << static_cast<long double>(cutoff) << "," << std::defaultfloat << a
-       << "," << std::fixed << std::setprecision(ERROR_DECIMAL_PRECISION) << t.maxError[a] << ","
-       << t.primeOfMaxError[a] << "," << t.minError[a] << ","
-       << t.primeOfMinError[a] << std::endl;
+       << "," << std::fixed << std::setprecision(ERROR_DECIMAL_PRECISION)
+       << t.maxError[a] << "," << t.primeOfMaxError[a] << "," << t.minError[a]
+       << "," << t.primeOfMinError[a] << std::endl;
   return;
 }
 
