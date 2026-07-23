@@ -16,17 +16,34 @@ export LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH
 
 Then do 
 ```bash
-./main <x> <n> <threads> <toggles>
+./main_all <x> <n> <threads> <toggles>
 ```
 with the experiment you want to run.
 
 For example:
 ```bash
-./main 1000 25 4 --PrimePowers
+./main_all 1000 25 4 --PrimePowers
 ```
 will run the experiment on all primes up to 1000, and it will be run on all n between 2 and 25.
 
 It will use 4 threads, and will include prime powers as well as regular primes.
+
+# Variations of the experiment
+
+```bash
+# includes all experiments
+./main_all
+
+# just the theta error terms
+./main_theta_data
+
+# just finds data for first prime in each AP
+./main_first_prime
+
+# just finds data for largest gap in each AP
+./main_largest_gap
+```
+All is likely the only one needed. Others are mostly for testing purposes.
 
 # Toggles
 
