@@ -18,6 +18,18 @@ target_link_directories(prime_lib PRIVATE
     $ENV{HOME}/.local/lib64
 )
 
+set_property(TARGET prime_lib PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+
+target_compile_options(prime_lib PRIVATE
+    $<$<CONFIG:Release>:-O3>
+    $<$<CONFIG:Release>:-march=native>
+)
+
+target_compile_options(prime_lib PRIVATE
+    $<$<CONFIG:Debug>:-O0>
+    $<$<CONFIG:Debug>:-g>
+)
+
 target_link_libraries(prime_lib
     primesieve
     gmp

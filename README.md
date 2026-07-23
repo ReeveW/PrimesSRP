@@ -9,7 +9,7 @@ cd ~/PrimesSRP
 rm -rf build
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 export LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH
 ```
@@ -27,3 +27,21 @@ For example:
 will run the experiment on all primes up to 1000, and it will be run on all n between 2 and 25.
 
 It will use 4 threads, and will include prime powers as well as regular primes.
+
+# Toggles
+
+These are all optional. You can run the program without any of them.
+
+Toggles to change the expected error value:
+```bash
+--sqrt
+--tripleLog
+--doubleLog
+--singleLog
+```
+
+Other Toggles:
+```bash
+# Adds list of prime powers to the list of primes which the iterator uses
+--PrimePowers
+```

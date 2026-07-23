@@ -76,9 +76,9 @@ void eTheta(const uint64_t n, const uint64_t x, std::ostream* out,
   ThetaErrorInfo t(n, cutoffs.size());
   uint64_t phin = phi(n);
 
+#if defined(THETA_DATA)
   outputHeaderForN(n, out);
-  outputHeaderForN(n, largestGapOutput);
-  outputHeaderForN(n, firstPrimeOutput);
+#endif
 
   *maxOverAOutput << "n = " << n << std::endl;
 
@@ -88,15 +88,22 @@ void eTheta(const uint64_t n, const uint64_t x, std::ostream* out,
                  largestGapOutput, firstPrimeOutput);
     }
     uint64_t a = prime % n;
+#if defined(THETA_DATA)
     updateErrorTerms(t, prime, phin, n, a);
+#endif
 
-    // code for first prime in AP, max gap in each cutoff
+#if defined(FIRST_PRIME)
     if (!t.firstPrimeInAP[a]) {
       t.firstPrimeInAP[a] = prime;
-    } else {
+    }
+#endif
+#if defined(LARGEST_GAP)
+    if (t.lastPrimeInAP[a]) {
       t.largestGapInAP[a] =
           std::max(t.largestGapInAP[a], prime - t.lastPrimeInAP[a]);
     }
+#endif
+
     t.lastPrimeInAP[a] = prime;
   }
 
@@ -141,15 +148,18 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
                 std::ostream* maxOverAOutput, std::ostream* largestGapOutput,
                 std::ostream* firstPrimeOutput) {
   uint64_t x = cutoffs[currentCutoff];
+  #if defined(THETA_DATA)
   long double d = denominator.computeDenominator(x);
   long double num = numerator(phin, x);
 
   allAErrorData allA;
+  #endif
 
   for (uint64_t a = 0; a < n; ++a) {
     if (std::gcd(a, n) != 1) {
       continue;
     }
+#if defined(THETA_DATA)
     long double e = error(t.thetaInAP[a], num, d);
 
     updateCutoffErrors(e, t, a, x, currentCutoff);
@@ -164,15 +174,27 @@ void nextCutoff(std::vector<uint64_t>& cutoffs, int& currentCutoff, uint64_t n,
       allA.aMax = a;
       allA.aMaxPrime = t.primeOfMaxError[a];
     }
-
     outputErrorDataForCutoff(x, a, t, out);
-    outputFirstPrimeForCutoff(x, a, t, firstPrimeOutput);
-    outputLargestGapForCutoff(x, a, t, largestGapOutput);
+#endif
 
+#if defined(FIRST_PRIME)
+    outputFirstPrimeForCutoff(x, a, t, firstPrimeOutput);
+#endif
+#if defined(LARGEST_GAP)
+    outputLargestGapForCutoff(x, a, t, largestGapOutput);
+#endif
+
+#if defined(THETA_DATA)
     resetErrorForCutoff(e, t, a, x);
+#endif
+#if defined(LARGEST_GAP)
+    t.largestGapInAP[a] = 0;
+#endif
   }
 
+  #if defined(THETA_DATA)
   outputErrorOverAllA(x, allA, maxOverAOutput);
+  #endif
 
   currentCutoff++;
   return;
@@ -221,7 +243,6 @@ void resetErrorForCutoff(long double e, ThetaErrorInfo& t, uint64_t i,
   t.primeOfMaxError[i] = x;
   t.minError[i] = e;
   t.primeOfMinError[i] = x;
-  t.largestGapInAP[i] = 0;
   return;
 }
 
@@ -247,11 +268,13 @@ void updateCutoffErrors(long double e, ThetaErrorInfo& t, uint64_t i,
 
 uint64_t phi(const uint64_t n) {
   uint64_t count = 0;
+#if defined(THETA_DATA)
   for (uint64_t a = 1; a < n; ++a) {
     if (std::gcd(a, n) == 1) {
       count++;
     }
   }
+#endif
   return count;
 }
 
